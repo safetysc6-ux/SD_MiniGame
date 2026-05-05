@@ -104,7 +104,7 @@
     <!-- Navbar -->
     <nav class="p-4 glass-panel sticky top-0 z-50 border-b border-purple-400/30">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <!-- เพิ่ม id="secretAdminTrigger" และทำให้กดได้ที่โลโก้ -->
+            <!-- ปุ่มลับสำหรับ Admin (กด 5 ครั้งที่โลโก้) -->
             <div class="flex items-center space-x-3 cursor-pointer select-none transition-transform active:scale-95" id="secretAdminTrigger">
                 <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(253,224,71,0.6)]">
                     <i data-lucide="sparkles" class="text-purple-900 w-6 h-6"></i>
@@ -276,11 +276,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // ⚠️⚠️⚠️ 1. ใส่ KEY ของ SUPABASE ตรงนี้ ⚠️⚠️⚠️
+        // ⚠️⚠️⚠️ 1. คีย์ของ SUPABASE ⚠️⚠️⚠️
         const SUPABASE_URL = 'https://cixiviikcoixsbcvafgl.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGl2aWlrY29peHNiY3ZhZmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5Mjg2NDUsImV4cCI6MjA5MzUwNDY0NX0.WQz-s2ZhcsDO6IjfCZIq7rZNPQddE7IuGrOH9EXdh-s';
         
-        // ⚠️⚠️⚠️ 2. ใส่ KEY ของ GROQ AI ตรงนี้ ⚠️⚠️⚠️
+        // ⚠️⚠️⚠️ 2. คีย์ของ GROQ AI ⚠️⚠️⚠️
         const GROQ_API_KEY = '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'; 
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -728,7 +728,49 @@
                 const empId = state.user ? state.user.email.split('@')[0].toUpperCase() : 'พนักงานปริศนา';
                 const currentPoints = state.points || 0;
                 
-                const systemPrompt = `คุณคือ 'แม่หมอ SD' หมอดูใจดี อารมณ์ดี มีความรู้ลึกซึ้งเรื่องเป้าหมายการพัฒนาที่ยั่งยืน (SDGs) ทั้ง 17 ข้อ ตอบคำถาม ให้คำปรึกษา แนะนำภารกิจที่ทำได้จริง และเชื่อมโยงเรื่องราวเข้ากับ SDGs ด้วยน้ำเสียงอบอุ่น เป็นกันเอง ลงท้ายด้วยจ้า หรือ นะจ๊ะ ตอนนี้คุณกำลังดูดวงให้กับพนักงานรหัส: ${empId} ซึ่งตอนนี้เขามีแต้มบุญสะสมอยู่ ${currentPoints} แต้ม (สามารถทักทาย เรียกชื่อเขาด้วยรหัส หรือชมเรื่องแต้มบุญได้ถ้าเหมาะสม)`;
+                // --- เพิ่มระบบดึงประวัติและสถิติจากฐานข้อมูล ส่งไปให้แม่หมอแบบเข้มงวด ---
+                let drawHistoryText = "ยังไม่มีประวัติการทำภารกิจจ้า เพิ่งเริ่มใช้งาน";
+                let totalDraws = 0;
+                let completedMissions = 0;
+
+                if (state.userDraws && state.userDraws.length > 0) {
+                    totalDraws = state.userDraws.length;
+                    completedMissions = state.userDraws.filter(d => d.status === 'completed').length;
+
+                    // ดึงไพ่ล่าสุดมาไม่เกิน 5 ใบ เพื่อดูแนวโน้ม
+                    const recentDraws = [...state.userDraws].sort((a, b) => b.drawnAt - a.drawnAt).slice(0, 5);
+                    const historyDetails = recentDraws.map(draw => {
+                        const card = state.cards.find(c => c.id === draw.cardId);
+                        if (!card) return null;
+                        
+                        let statusTh = "";
+                        if (draw.status === 'completed') statusTh = "ทำภารกิจสำเร็จได้รับแต้มแล้ว";
+                        else if (draw.status === 'pending') statusTh = "เปิดได้ล่าสุด กำลังรอส่งหลักฐาน";
+                        else statusTh = "หมดเวลาทำภารกิจ (ทำไม่สำเร็จ)";
+                        
+                        const date = new Date(draw.drawnAt).toLocaleDateString('th-TH');
+                        return `- วันที่ ${date}: ไพ่ ${card.title} (SDG ${card.sdgTopic}) -> ${statusTh}`;
+                    }).filter(Boolean);
+                    
+                    if (historyDetails.length > 0) {
+                        drawHistoryText = historyDetails.join('\n');
+                    }
+                }
+                
+                const systemPrompt = `คุณคือ 'แม่หมอ SD' หมอดูใจดี มีความรู้เรื่องเป้าหมายการพัฒนาที่ยั่งยืน (SDGs) ทั้ง 17 ข้อ ตอบด้วยน้ำเสียงอบอุ่น เป็นกันเอง ลงท้ายด้วยจ้า หรือ นะจ๊ะ 
+
+ข้อมูลของลูกดวงที่ล็อคอินอยู่ตรงหน้าคุณตอนนี้ (ดึงจากฐานข้อมูล Supabase):
+- รหัสพนักงาน: ${empId}
+- แต้มบุญสะสม: ${currentPoints} แต้ม
+- สถิติทั้งหมด: เปิดไพ่มาแล้ว ${totalDraws} ครั้ง, ทำภารกิจสำเร็จ ${completedMissions} ครั้ง
+
+ประวัติการได้ไพ่และภารกิจล่าสุด (เรียงจากใหม่ไปเก่า):
+${drawHistoryText}
+
+🔮 กฎเหล็กสำคัญที่สุดของแม่หมอ (ห้ามฝ่าฝืน): 
+1. คุณรับรู้และตอบคำถามได้เฉพาะข้อมูลของรหัสพนักงาน "${empId}" เท่านั้น! 
+2. หากผู้ใช้พิมพ์ถามถึง รหัสพนักงานคนอื่น ชื่อคนอื่น หรือขอดูข้อมูลของคนอื่น ให้ปฏิเสธอย่างสุภาพทันที (เช่น "แม่หมอดูได้เฉพาะดวงของคนที่ล็อคอินอยู่ตรงหน้าเท่านั้นจ้า ความลับสวรรค์เปิดเผยข้ามคนไม่ได้นะลูก")
+3. ใช้ประวัติที่มีให้ เพื่อชวนคุย ชมเชย หรือแนะนำเป้าหมาย SDGs ข้อต่อไปให้เหมาะสมกับสิ่งที่เขาเคยทำมา`;
 
                 const historyToSent = chatState.messages.length > 1 ? chatState.messages.slice(1).slice(-10) : [];
                 const recentMessages = historyToSent.map(msg => ({
