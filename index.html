@@ -244,15 +244,23 @@
                     <h2 class="text-2xl font-bold font-mali text-red-300">ระบบแผงควบคุม (Admin)</h2>
                     <p class="text-purple-200 mt-1 text-sm">ดูสถิติ ดาวน์โหลดรายงาน และจัดการไพ่</p>
                 </div>
-                <div class="flex bg-purple-950/80 rounded-full p-1 border border-purple-500/30 w-full md:w-auto">
-                    <button id="btnToggleAdminDash" class="flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all bg-red-500/80 text-white shadow-md">📊 แดชบอร์ด</button>
-                    <button id="btnToggleAdminCards" class="flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all text-purple-300 hover:text-white">🃏 จัดการหน้าไพ่</button>
+                <div class="flex flex-wrap bg-purple-950/80 rounded-2xl md:rounded-full p-1 border border-purple-500/30 w-full md:w-auto gap-1">
+                    <button id="btnToggleAdminDash" class="flex-1 px-3 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-xs md:text-sm transition-all bg-red-500/80 text-white shadow-md touch-manipulation whitespace-nowrap">📊 แดชบอร์ด</button>
+                    <button id="btnToggleAdminMissions" class="flex-1 px-3 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-xs md:text-sm transition-all text-purple-300 hover:text-white bg-transparent touch-manipulation whitespace-nowrap">📝 ตรวจภารกิจ</button>
+                    <button id="btnToggleAdminCards" class="flex-1 px-3 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-xs md:text-sm transition-all text-purple-300 hover:text-white bg-transparent touch-manipulation whitespace-nowrap">🃏 จัดการไพ่</button>
                 </div>
             </div>
 
             <!-- Admin Dashboard View -->
             <div id="adminDashboardView" class="space-y-6 animate-slide-up">
                 <!-- Injected via JS -->
+            </div>
+
+            <!-- Admin Missions View -->
+            <div id="adminMissionsView" class="hidden space-y-6 animate-slide-up">
+                <div id="adminMissionList" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 pb-10">
+                    <!-- Missions injected here -->
+                </div>
             </div>
 
             <!-- Admin Cards View -->
@@ -532,8 +540,8 @@
                 const { data: allProfiles } = await supabaseClient.from('profiles').select('*').order('points', { ascending: false });
                 state.allProfiles = allProfiles || [];
 
-                // Fetch ALL Draws (สำหรับ Dashboard)
-                const { data: allDraws } = await supabaseClient.from('daily_draws').select('id, user_id, status, drawnAt');
+                // Fetch ALL Draws (สำหรับ Dashboard) - ดึงข้อมูลทั้งหมดที่จำเป็นสำหรับการแสดงภารกิจ
+                const { data: allDraws } = await supabaseClient.from('daily_draws').select('*').order('drawnAt', { ascending: false });
                 state.allDraws = allDraws || [];
 
                 renderAll();
@@ -777,23 +785,26 @@
         // --- เพิ่มฟังก์ชัน Render Admin Dashboard & Cards ---
         function renderAdmin() {
             const btnDash = document.getElementById('btnToggleAdminDash');
+            const btnMissions = document.getElementById('btnToggleAdminMissions');
             const btnCards = document.getElementById('btnToggleAdminCards');
             const viewDash = document.getElementById('adminDashboardView');
+            const viewMissions = document.getElementById('adminMissionsView');
             const viewCards = document.getElementById('adminCardsView');
 
-            if (state.adminTabMode === 'dashboard') {
-                btnDash.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all bg-red-500/80 text-white shadow-md touch-manipulation";
-                btnCards.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all text-purple-300 hover:text-white bg-transparent touch-manipulation";
-                viewDash.classList.remove('hidden');
-                viewCards.classList.add('hidden');
-                renderAdminDashboard();
-            } else {
-                btnCards.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all bg-red-500/80 text-white shadow-md touch-manipulation";
-                btnDash.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all text-purple-300 hover:text-white bg-transparent touch-manipulation";
-                viewCards.classList.remove('hidden');
-                viewDash.classList.add('hidden');
-                renderAdminCards();
-            }
+            const activeClass = "flex-1 px-3 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-xs md:text-sm transition-all bg-red-500/80 text-white shadow-md touch-manipulation whitespace-nowrap";
+            const inactiveClass = "flex-1 px-3 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-xs md:text-sm transition-all text-purple-300 hover:text-white bg-transparent touch-manipulation whitespace-nowrap";
+
+            btnDash.className = state.adminTabMode === 'dashboard' ? activeClass : inactiveClass;
+            btnMissions.className = state.adminTabMode === 'missions' ? activeClass : inactiveClass;
+            btnCards.className = state.adminTabMode === 'cards' ? activeClass : inactiveClass;
+
+            viewDash.classList.toggle('hidden', state.adminTabMode !== 'dashboard');
+            viewMissions.classList.toggle('hidden', state.adminTabMode !== 'missions');
+            viewCards.classList.toggle('hidden', state.adminTabMode !== 'cards');
+
+            if (state.adminTabMode === 'dashboard') renderAdminDashboard();
+            if (state.adminTabMode === 'missions') renderAdminMissions();
+            if (state.adminTabMode === 'cards') renderAdminCards();
         }
 
         function renderAdminDashboard() {
@@ -875,6 +886,67 @@
 
             html += `</tbody></table></div></div>`;
             view.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderAdminMissions() {
+            const listEl = document.getElementById('adminMissionList');
+            const completedDraws = state.allDraws.filter(d => d.status === 'completed');
+            
+            if (completedDraws.length === 0) {
+                listEl.innerHTML = '<div class="col-span-full text-center py-10 text-purple-300 glass-panel rounded-2xl border-dashed animate-fade-in">ยังไม่มีภารกิจที่ส่งเข้ามาจ้า</div>';
+                return;
+            }
+
+            let html = '';
+            completedDraws.forEach((draw, index) => {
+                const profile = state.allProfiles.find(p => p.id === draw.user_id);
+                const card = state.cards.find(c => c.id === draw.cardId);
+                
+                const empId = profile?.emp_id || 'ไม่ระบุ';
+                const cardTitle = card?.title || 'ไพ่ที่ถูกลบไปแล้ว';
+                const sdgTopic = card?.sdgTopic || '?';
+                const dateStr = new Date(draw.drawnAt).toLocaleString('th-TH');
+                
+                let imgHtml = '';
+                if (draw.proofImage) {
+                    imgHtml = `<div class="mt-3 rounded-xl overflow-hidden border border-purple-500/30 bg-black/20">
+                        <img src="${draw.proofImage}" class="w-full h-48 md:h-56 object-contain hover:scale-105 transition-transform" alt="หลักฐานภารกิจ">
+                    </div>`;
+                }
+
+                let animationClass = index < 6 ? `stagger-${(index%4)+1}` : '';
+
+                html += `
+                    <div class="bg-gradient-to-br from-purple-900/60 to-indigo-900/60 p-4 md:p-5 rounded-2xl border border-purple-400/30 shadow-lg ${animationClass}">
+                        <div class="flex justify-between items-start mb-3 border-b border-purple-500/30 pb-2">
+                            <div>
+                                <span class="text-xs text-purple-300">รหัสพนักงาน:</span>
+                                <h4 class="font-bold text-yellow-300 text-lg font-mali">${empId}</h4>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] bg-green-500/20 text-green-300 px-2 py-1 rounded-md border border-green-500/30 font-bold">ทำสำเร็จ</span>
+                                <div class="text-[10px] md:text-xs text-purple-300 mt-1.5">${dateStr}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <span class="text-[10px] bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 px-2 py-0.5 rounded-full font-bold shadow-sm mr-2 whitespace-nowrap">SDG ${sdgTopic}</span>
+                            <span class="font-bold text-sm text-white">${cardTitle}</span>
+                        </div>
+                        
+                        <div class="bg-purple-950/60 p-3 md:p-4 rounded-xl border border-purple-500/20 text-sm text-purple-100 shadow-inner">
+                            <div class="flex items-center gap-1.5 mb-1.5 text-yellow-400 font-bold font-mali">
+                                <i data-lucide="message-square" class="w-4 h-4"></i> เล่าสู่กันฟัง:
+                            </div>
+                            <p class="font-light italic break-words whitespace-pre-wrap leading-relaxed text-sm md:text-base">"${draw.missionNote || 'ไม่ได้ระบุข้อความ'}"</p>
+                            ${imgHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            listEl.innerHTML = html;
             lucide.createIcons();
         }
 
@@ -1355,6 +1427,7 @@ ${drawHistoryText}
                 
                 // สลับ Tab ย่อยในหน้า Admin
                 if (e.target.id === 'btnToggleAdminDash') { state.adminTabMode = 'dashboard'; renderAdmin(); }
+                if (e.target.id === 'btnToggleAdminMissions') { state.adminTabMode = 'missions'; renderAdmin(); }
                 if (e.target.id === 'btnToggleAdminCards') { state.adminTabMode = 'cards'; renderAdmin(); }
                 
                 // ปุ่มดาวน์โหลด CSV
