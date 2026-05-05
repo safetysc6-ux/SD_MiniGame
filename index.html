@@ -2,13 +2,13 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>คำทำนายรายวันกับแม่หมอ SD</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Kanit', sans-serif; }
+        body { font-family: 'Kanit', sans-serif; touch-action: manipulation; }
         .font-mali { font-family: 'Mali', cursive; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -29,9 +29,26 @@
         .btn-magic { animation: pulse-glow 2.5s infinite; transition: all 0.3s; }
         .btn-magic:hover { animation: none; transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 30px rgba(253, 224, 71, 0.8); }
 
+        /* UI Transition Animations */
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-slide-up { animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        
+        .stagger-1 { opacity: 0; animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards; }
+        .stagger-2 { opacity: 0; animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards; }
+        .stagger-3 { opacity: 0; animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards; }
+        .stagger-4 { opacity: 0; animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards; }
+
         /* Custom Elements */
-        .glass-panel { background: rgba(92, 50, 123, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .glass-panel { background: rgba(92, 50, 123, 0.65); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); }
+        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); }
         
         .crystal-ball {
             width: 160px; height: 160px;
@@ -48,8 +65,8 @@
 
         .tarot-card {
             background: #FFFAF0; 
-            border: 8px solid #D4AF37; 
-            outline: 2px solid #8B4513; 
+            border: 6px solid #D4AF37; 
+            outline: 1px solid #8B4513; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 0 20px rgba(212, 175, 55, 0.3);
             border-radius: 16px;
         }
@@ -57,6 +74,9 @@
         /* Chat Bubbles */
         .chat-bot { background: #FFFFFF; color: #4A1E6D; border-radius: 20px 20px 20px 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .chat-user { background: #FFE082; color: #4A1E6D; border-radius: 20px 20px 4px 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Mobile Touch Fix */
+        .touch-manipulation { touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-[#6A3093] via-[#4A1E6D] to-[#2B0E42] text-white min-h-screen selection:bg-yellow-500 selection:text-purple-900 relative overflow-x-hidden">
@@ -71,30 +91,30 @@
     </div>
 
     <!-- Auth Overlay (หน้าต่าง Login) -->
-    <div id="authOverlay" class="fixed inset-0 bg-[#2B0E42]/95 z-[100] flex items-center justify-center backdrop-blur-md transition-opacity duration-300 hidden">
-        <div class="glass-panel p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(253,224,71,0.2)] max-w-sm w-full border border-purple-400/50 relative overflow-hidden mx-4">
+    <div id="authOverlay" class="fixed inset-0 bg-[#2B0E42]/95 z-[100] flex items-center justify-center backdrop-blur-md transition-opacity duration-300 hidden animate-fade-in">
+        <div class="glass-panel p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(253,224,71,0.2)] max-w-sm w-full border border-purple-400/50 relative overflow-hidden mx-4 animate-slide-up">
             <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full pointer-events-none"></div>
             
-            <div class="text-center mb-8 relative z-10">
-                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-4xl shadow-[0_0_15px_rgba(253,224,71,0.6)] border-2 border-yellow-400 mx-auto mb-4">🔮</div>
-                <h2 class="text-2xl font-bold font-mali text-yellow-400">แม่หมอ SD พยากรณ์</h2>
-                <p class="text-purple-200 text-sm mt-1">กรุณาใส่รหัสพนักงานเพื่อเริ่มดูดวง</p>
+            <div class="text-center mb-8 relative z-10 stagger-1">
+                <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-5xl shadow-[0_0_15px_rgba(253,224,71,0.6)] border-2 border-yellow-400 mx-auto mb-4 floating">🔮</div>
+                <h2 class="text-3xl font-bold font-mali text-yellow-400">แม่หมอ SD พยากรณ์</h2>
+                <p class="text-purple-200 text-sm mt-2">กรุณาใส่รหัสพนักงานเพื่อเริ่มดูดวง</p>
             </div>
 
-            <div class="space-y-4 relative z-10">
+            <div class="space-y-4 relative z-10 stagger-2">
                 <div>
                     <label class="block text-sm font-medium text-purple-200 mb-1.5">รหัสพนักงาน (ตัวเลขเท่านั้น)</label>
                     <div class="relative">
-                        <i data-lucide="user" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400"></i>
-                        <input type="text" id="authEmpId" inputmode="numeric" placeholder="เช่น 1001" class="w-full bg-purple-950/50 rounded-xl py-3 pl-10 pr-4 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                        <i data-lucide="user" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400"></i>
+                        <input type="text" id="authEmpId" inputmode="numeric" placeholder="เช่น 1001" class="w-full bg-purple-950/50 rounded-2xl py-3.5 pl-12 pr-4 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/50 outline-none transition-all text-lg tracking-wide">
                     </div>
                 </div>
                 
-                <div id="authError" class="text-red-400 text-sm text-center hidden bg-red-900/20 p-2 rounded-lg border border-red-500/30"></div>
+                <div id="authError" class="text-red-400 text-sm text-center hidden bg-red-900/20 p-2.5 rounded-xl border border-red-500/30 font-medium"></div>
 
-                <div class="pt-4 space-y-3">
-                    <button id="btnEnter" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:scale-105 text-purple-900 font-bold text-lg py-3 rounded-xl transition-transform shadow-md flex justify-center items-center">
-                        เข้าสู่ระบบ / เริ่มต้นใช้งาน
+                <div class="pt-4 space-y-3 stagger-3">
+                    <button id="btnEnter" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:scale-105 active:scale-95 text-purple-900 font-bold text-xl py-3.5 rounded-2xl transition-transform shadow-lg flex justify-center items-center font-mali">
+                        เข้าสู่ระบบ / เริ่มดูดวง
                     </button>
                 </div>
             </div>
@@ -102,64 +122,64 @@
     </div>
 
     <!-- Navbar -->
-    <nav class="p-4 glass-panel sticky top-0 z-50 border-b border-purple-400/30">
+    <nav class="p-3 md:p-4 glass-panel sticky top-0 z-50 border-b border-purple-400/30 shadow-lg">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <!-- ปุ่มลับสำหรับ Admin (กด 5 ครั้งที่โลโก้) -->
-            <div class="flex items-center space-x-3 cursor-pointer select-none transition-transform active:scale-95" id="secretAdminTrigger">
-                <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(253,224,71,0.6)]">
-                    <i data-lucide="sparkles" class="text-purple-900 w-6 h-6"></i>
+            <!-- ปุ่มลับสำหรับ Admin (กด 5 ครั้งที่โลโก้) - เปลี่ยนมาใช้ touch-manipulation -->
+            <div class="flex items-center space-x-3 cursor-pointer touch-manipulation transition-transform active:scale-90" id="secretAdminTrigger">
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-yellow-400 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(253,224,71,0.6)] shrink-0">
+                    <i data-lucide="sparkles" class="text-purple-900 w-5 h-5 md:w-6 md:h-6"></i>
                 </div>
-                <h1 class="text-2xl font-bold font-mali text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-sm">แม่หมอ SD Oracle</h1>
+                <h1 class="text-xl md:text-2xl font-bold font-mali text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-sm truncate">แม่หมอ SD Oracle</h1>
             </div>
-            <div class="flex space-x-4 items-center text-sm flex-wrap justify-end">
-                <div class="bg-purple-900/80 px-4 py-1.5 rounded-full text-yellow-300 font-bold border border-yellow-500/30 flex items-center gap-2 shadow-inner" id="navPoints">
-                    <span class="text-lg">✨</span> <span id="pointsText">แต้มบุญ: 0</span>
+            <div class="flex space-x-2 md:space-x-4 items-center text-sm flex-wrap justify-end">
+                <div class="bg-purple-900/80 px-3 md:px-4 py-1.5 rounded-full text-yellow-300 font-bold border border-yellow-500/30 flex items-center gap-1.5 shadow-inner" id="navPoints">
+                    <span class="text-base md:text-lg">✨</span> <span id="pointsText" class="text-sm md:text-base">0</span>
                 </div>
-                <button id="logoutBtn" class="bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors hidden border border-red-500/30">
-                    ออกจากระบบ
+                <button id="logoutBtn" class="bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors hidden border border-red-500/30 shrink-0">
+                    <i data-lucide="log-out" class="w-4 h-4 md:hidden"></i><span class="hidden md:inline">ออก</span>
                 </button>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-4xl mx-auto p-4 py-8 relative z-10">
+    <main class="max-w-4xl mx-auto p-4 py-6 md:py-8 relative z-10">
         
         <!-- Loading State -->
-        <div id="loadingOverlay" class="absolute inset-0 bg-[#2B0E42]/90 z-40 flex items-center justify-center rounded-3xl backdrop-blur-md">
-            <div class="text-center bg-purple-900/50 p-8 rounded-3xl border border-purple-500/30 shadow-2xl">
-                <i data-lucide="loader-2" class="w-12 h-12 text-yellow-400 animate-spin mx-auto mb-4"></i>
+        <div id="loadingOverlay" class="absolute inset-0 bg-[#2B0E42]/90 z-40 flex items-center justify-center rounded-3xl backdrop-blur-md animate-fade-in">
+            <div class="text-center bg-purple-900/50 p-8 rounded-3xl border border-purple-500/30 shadow-2xl animate-slide-up">
+                <div class="crystal-ball mx-auto mb-6 scale-75 floating"><i data-lucide="sparkles" class="w-12 h-12 text-white animate-spin"></i></div>
                 <p class="text-xl font-bold font-mali text-yellow-200 tracking-wide">แม่หมอกำลังจัดเตรียมไพ่...</p>
             </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="flex justify-start md:justify-center space-x-3 mb-10 overflow-x-auto hide-scrollbar pb-2 px-2">
-            <button data-tab="home" class="tab-btn flex shrink-0 items-center space-x-2 px-6 py-3.5 rounded-full font-bold font-mali transition-all duration-300 bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 shadow-[0_5px_20px_rgba(253,224,71,0.5)] transform scale-105 whitespace-nowrap">
-                <i data-lucide="sparkles" class="w-5 h-5"></i><span>เปิดไพ่วันนี้</span>
+        <div class="flex justify-start md:justify-center space-x-2 md:space-x-4 mb-8 overflow-x-auto hide-scrollbar pb-2 px-1 snap-x animate-slide-up">
+            <button data-tab="home" class="tab-btn snap-center flex shrink-0 items-center space-x-2 px-5 md:px-7 py-3 rounded-full font-bold font-mali transition-all duration-300 bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 shadow-[0_5px_15px_rgba(253,224,71,0.4)] transform scale-105 whitespace-nowrap text-sm md:text-base">
+                <i data-lucide="sparkles" class="w-4 h-4 md:w-5 md:h-5"></i><span>เปิดไพ่วันนี้</span>
             </button>
-            <button data-tab="leaderboard" class="tab-btn flex shrink-0 items-center space-x-2 px-6 py-3.5 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap">
-                <i data-lucide="trophy" class="w-5 h-5"></i><span>จัดอันดับ</span>
+            <button data-tab="leaderboard" class="tab-btn snap-center flex shrink-0 items-center space-x-2 px-5 md:px-7 py-3 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap text-sm md:text-base">
+                <i data-lucide="trophy" class="w-4 h-4 md:w-5 md:h-5"></i><span>จัดอันดับ</span>
             </button>
-            <button data-tab="chatbot" class="tab-btn flex shrink-0 items-center space-x-2 px-6 py-3.5 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap">
-                <i data-lucide="message-circle" class="w-5 h-5"></i><span>คุยกับแม่หมอ</span>
+            <button data-tab="chatbot" class="tab-btn snap-center flex shrink-0 items-center space-x-2 px-5 md:px-7 py-3 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap text-sm md:text-base">
+                <i data-lucide="message-circle" class="w-4 h-4 md:w-5 md:h-5"></i><span>คุยกับแม่หมอ</span>
             </button>
-            <button data-tab="admin" id="adminTabBtn" class="tab-btn shrink-0 hidden items-center space-x-2 px-6 py-3.5 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap">
-                <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>แผงควบคุม</span>
+            <button data-tab="admin" id="adminTabBtn" class="tab-btn snap-center shrink-0 hidden items-center space-x-2 px-5 md:px-7 py-3 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap text-sm md:text-base">
+                <i data-lucide="shield-alert" class="w-4 h-4 md:w-5 md:h-5 text-red-400"></i><span class="text-red-300">แผงควบคุม</span>
             </button>
         </div>
 
         <!-- Tab Content: Home (Draw Card) -->
-        <div id="homeTab" class="tab-content">
-            <div id="homeContainer" class="glass-panel rounded-[2rem] p-6 md:p-12 shadow-[0_10px_40px_rgba(0,0,0,0.5)] min-h-[450px] flex items-center justify-center relative overflow-hidden">
+        <div id="homeTab" class="tab-content animate-fade-in">
+            <div id="homeContainer" class="glass-panel rounded-[2rem] p-5 md:p-10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] min-h-[450px] flex items-center justify-center relative overflow-hidden">
                 <!-- Injected via JS -->
             </div>
         </div>
 
         <!-- Tab Content: Leaderboard -->
-        <div id="leaderboardTab" class="tab-content hidden">
+        <div id="leaderboardTab" class="tab-content hidden animate-fade-in">
             <div class="glass-panel rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex flex-col min-h-[500px] overflow-hidden relative border border-purple-400/30">
-                <div class="p-6 bg-purple-900/60 border-b border-purple-500/30 flex items-center justify-between">
+                <div class="p-6 bg-gradient-to-r from-purple-900/80 to-[#2B0E42]/80 border-b border-purple-500/30 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md">
                     <div>
                         <h2 class="text-2xl font-bold font-mali text-yellow-400 flex items-center gap-2">
                             <i data-lucide="trophy" class="w-6 h-6 text-yellow-500"></i> ทำเนียบผู้พิทักษ์โลก
@@ -167,33 +187,33 @@
                         <p class="text-sm text-purple-200 mt-1">ใครมีแต้มบุญสูงสุดในองค์กร มาดูกัน!</p>
                     </div>
                 </div>
-                <div id="leaderboardContainer" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
+                <div id="leaderboardContainer" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 pb-10">
                     <!-- Injected via JS -->
                 </div>
             </div>
         </div>
 
         <!-- Tab Content: Chatbot -->
-        <div id="chatbotTab" class="tab-content hidden">
-            <div class="glass-panel rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex flex-col h-[600px] overflow-hidden relative border border-purple-400/30">
-                <div class="p-5 bg-purple-900/60 border-b border-purple-500/30 flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-[0_0_15px_rgba(253,224,71,0.6)] bg-gradient-to-br from-purple-500 to-indigo-600 border-2 border-yellow-400 relative">
+        <div id="chatbotTab" class="tab-content hidden animate-fade-in">
+            <div class="glass-panel rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex flex-col h-[65vh] md:h-[600px] overflow-hidden relative border border-purple-400/30">
+                <div class="p-4 md:p-5 bg-gradient-to-r from-purple-900/80 to-indigo-900/80 border-b border-purple-500/30 flex items-center gap-4 shrink-0">
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-2xl md:text-3xl shadow-[0_0_15px_rgba(253,224,71,0.6)] bg-gradient-to-br from-purple-500 to-indigo-600 border-2 border-yellow-400 relative">
                         🧙‍♀️
-                        <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-purple-900 rounded-full"></span>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 md:w-3.5 md:h-3.5 bg-green-400 border-2 border-purple-900 rounded-full"></span>
                     </div>
                     <div>
-                        <h3 class="text-xl font-bold font-mali text-yellow-300">แม่หมอ SD</h3>
-                        <p class="text-xs font-medium text-green-300">พร้อมให้คำปรึกษาและดูดวงจ้า</p>
+                        <h3 class="text-lg md:text-xl font-bold font-mali text-yellow-300">แม่หมอ SD</h3>
+                        <p class="text-xs font-medium text-green-300">ออนไลน์พร้อมพยากรณ์จ้า</p>
                     </div>
                 </div>
-                <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-6 bg-black/10">
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 bg-black/10 scroll-smooth">
                     <!-- Chat messages injected here -->
                 </div>
-                <div class="p-4 bg-purple-900/60 border-t border-purple-500/30">
-                    <div class="flex gap-3 bg-purple-950/50 p-2 rounded-full border border-purple-400/30 focus-within:border-yellow-400 focus-within:shadow-[0_0_10px_rgba(253,224,71,0.3)] transition-all">
-                        <input type="text" id="chatInput" placeholder="พิมพ์ถามเรื่องดวง หรือเป้าหมาย SDGs ได้เลย..." class="flex-1 bg-transparent px-4 py-2 text-white placeholder-purple-300/70 focus:outline-none font-medium">
-                        <button id="chatSendBtn" class="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-purple-900 w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-md">
-                            <i data-lucide="send" class="w-5 h-5 ml-1"></i>
+                <div class="p-3 md:p-4 bg-purple-900/80 border-t border-purple-500/30 shrink-0 backdrop-blur-md">
+                    <div class="flex gap-2 md:gap-3 bg-purple-950/70 p-1.5 md:p-2 rounded-full border border-purple-400/30 focus-within:border-yellow-400 focus-within:shadow-[0_0_10px_rgba(253,224,71,0.3)] transition-all">
+                        <input type="text" id="chatInput" placeholder="พิมพ์ถามเรื่องดวง หรือเป้าหมาย SDGs..." class="flex-1 bg-transparent px-3 md:px-4 py-2 text-white placeholder-purple-300/60 focus:outline-none font-medium text-sm md:text-base">
+                        <button id="chatSendBtn" class="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-purple-900 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 shadow-md shrink-0">
+                            <i data-lucide="send" class="w-4 h-4 md:w-5 md:h-5 ml-0.5 md:ml-1"></i>
                         </button>
                     </div>
                 </div>
@@ -201,92 +221,99 @@
         </div>
 
         <!-- Tab Content: Admin -->
-        <div id="adminTab" class="tab-content hidden space-y-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center glass-panel p-6 rounded-3xl border border-purple-400/30 gap-4 shadow-lg">
+        <div id="adminTab" class="tab-content hidden space-y-5 md:space-y-6 animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center glass-panel p-5 md:p-6 rounded-3xl border border-red-400/40 gap-4 shadow-lg bg-red-900/10">
                 <div>
-                    <h2 class="text-2xl font-bold font-mali text-yellow-400">ระบบแผงควบคุม (Admin)</h2>
-                    <p class="text-purple-200 mt-1">ดูสถิติ ดาวน์โหลดรายงาน และจัดการไพ่</p>
+                    <h2 class="text-2xl font-bold font-mali text-red-300">ระบบแผงควบคุม (Admin)</h2>
+                    <p class="text-purple-200 mt-1 text-sm">ดูสถิติ ดาวน์โหลดรายงาน และจัดการไพ่</p>
                 </div>
-                <div class="flex bg-purple-950/50 rounded-full p-1 border border-purple-500/30 w-full md:w-auto">
-                    <button id="btnToggleAdminDash" class="flex-1 px-5 py-2 rounded-full font-bold text-sm transition-colors bg-purple-500/50 text-white shadow-sm">แดชบอร์ดสถิติ</button>
-                    <button id="btnToggleAdminCards" class="flex-1 px-5 py-2 rounded-full font-bold text-sm transition-colors text-purple-300 hover:text-white">จัดการหน้าไพ่</button>
+                <div class="flex bg-purple-950/80 rounded-full p-1 border border-purple-500/30 w-full md:w-auto">
+                    <button id="btnToggleAdminDash" class="flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all bg-red-500/80 text-white shadow-md">📊 แดชบอร์ด</button>
+                    <button id="btnToggleAdminCards" class="flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all text-purple-300 hover:text-white">🃏 จัดการหน้าไพ่</button>
                 </div>
             </div>
 
             <!-- Admin Dashboard View -->
-            <div id="adminDashboardView" class="space-y-6">
+            <div id="adminDashboardView" class="space-y-6 animate-slide-up">
                 <!-- Injected via JS -->
             </div>
 
             <!-- Admin Cards View -->
-            <div id="adminCardsView" class="hidden space-y-6">
-                <div class="flex justify-end">
-                    <button id="toggleAddCardBtn" class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg">
+            <div id="adminCardsView" class="hidden space-y-6 animate-slide-up">
+                <div class="flex justify-end sticky top-20 z-20">
+                    <button id="toggleAddCardBtn" class="bg-gradient-to-r from-blue-400 to-blue-600 text-white px-5 py-3 md:px-6 rounded-full font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-blue-500/30">
                         <i data-lucide="plus" class="w-5 h-5"></i> สร้างไพ่ใบใหม่
                     </button>
                 </div>
 
-                <!-- Add Card Form -->
-                <div id="addCardForm" class="hidden glass-panel p-8 rounded-3xl border border-yellow-500/50 space-y-5 shadow-xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full"></div>
-                    <h3 class="font-mali text-xl font-bold text-yellow-300 mb-4 border-b border-purple-500/30 pb-2">✨ แบบฟอร์มสร้างไพ่</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
-                        <div>
-                            <label class="block text-sm font-medium text-purple-200 mb-1.5">หัวข้อ SDG (1-17)</label>
-                            <input type="number" id="f_sdgTopic" min="1" max="17" value="1" class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                <!-- Add/Edit Card Form -->
+                <div id="addCardForm" class="hidden glass-panel p-6 md:p-8 rounded-[2rem] border-2 border-blue-400/50 space-y-5 shadow-2xl relative overflow-hidden bg-[#2B0E42]/90">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 blur-3xl rounded-full pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-center border-b border-purple-500/30 pb-3 mb-4 relative z-10">
+                        <h3 id="formTitleText" class="font-mali text-xl md:text-2xl font-bold text-blue-300 flex items-center gap-2">✨ สร้างไพ่คำทำนายใหม่</h3>
+                        <button id="btnCancelEdit" class="hidden text-red-400 hover:text-red-300 bg-red-400/10 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 transition-colors">
+                            <i data-lucide="x" class="w-4 h-4"></i> ยกเลิกการแก้ไข
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 relative z-10">
+                        <div class="stagger-1">
+                            <label class="block text-sm font-bold text-blue-200 mb-1.5">หัวข้อ SDG (1-17)</label>
+                            <input type="number" id="f_sdgTopic" min="1" max="17" value="1" class="w-full bg-purple-950/80 rounded-xl p-3 md:p-3.5 text-white border border-purple-400/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all font-bold">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-purple-200 mb-1.5">ชื่อการ์ดพยากรณ์</label>
-                            <input type="text" id="f_title" placeholder="เช่น SDG 1: ขจัดความยากจน" class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                        <div class="stagger-1">
+                            <label class="block text-sm font-bold text-blue-200 mb-1.5">ชื่อการ์ดพยากรณ์</label>
+                            <input type="text" id="f_title" placeholder="เช่น SDG 1: ขจัดความยากจน" class="w-full bg-purple-950/80 rounded-xl p-3 md:p-3.5 text-white border border-purple-400/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all font-bold">
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-purple-200 mb-1.5">รูปภาพหน้าไพ่</label>
-                            <div class="flex gap-4 items-center bg-purple-950/40 p-4 rounded-2xl border border-purple-400/30">
-                                <div class="flex-1 space-y-3">
-                                    <label class="cursor-pointer bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl hover:from-purple-400 hover:to-indigo-400 flex items-center justify-center gap-2 w-full transition-all shadow-md">
-                                        <i data-lucide="image-plus" class="w-5 h-5"></i> อัปโหลดรูปจากเครื่อง
-                                        <input type="file" id="f_imageUpload" class="hidden" accept="image/*">
-                                    </label>
-                                    <div class="flex items-center gap-2">
-                                        <hr class="flex-1 border-purple-500/30">
-                                        <span class="text-xs text-purple-300">หรือใช้อีโมจิ/URL</span>
-                                        <hr class="flex-1 border-purple-500/30">
-                                    </div>
-                                    <input type="text" id="f_imageUrl" placeholder="ใส่ Emoji (เช่น 🌍) หรือ Link รูปภาพ" class="w-full bg-purple-900/50 rounded-xl p-2.5 text-white border border-purple-500/50 focus:border-yellow-400 outline-none text-sm">
-                                </div>
-                                <div class="w-28 h-40 bg-purple-900/80 rounded-xl border-2 border-dashed border-purple-400 flex flex-col items-center justify-center overflow-hidden shrink-0 shadow-inner relative">
+                        <div class="md:col-span-2 stagger-2">
+                            <label class="block text-sm font-bold text-blue-200 mb-1.5">รูปภาพหน้าไพ่ (แนะนำขนาด 400x400 px)</label>
+                            <div class="flex flex-col md:flex-row gap-4 items-center bg-purple-900/40 p-4 rounded-2xl border border-purple-500/40">
+                                <div class="w-32 h-32 md:w-36 md:h-36 bg-purple-950/80 rounded-2xl border-2 border-dashed border-purple-400 flex flex-col items-center justify-center overflow-hidden shrink-0 shadow-inner relative group">
                                     <img id="f_imagePreview" src="" class="hidden w-full h-full object-cover">
-                                    <div id="f_imagePlaceholder" class="text-center text-purple-300">
-                                        <i data-lucide="image" class="w-8 h-8 mx-auto mb-1 opacity-50"></i>
+                                    <div id="f_imagePlaceholder" class="text-center text-purple-300 p-2">
+                                        <i data-lucide="image" class="w-8 h-8 mx-auto mb-1 opacity-50 group-hover:scale-110 transition-transform"></i>
                                         <span class="text-xs">ตัวอย่างภาพ</span>
                                     </div>
                                 </div>
+                                <div class="flex-1 w-full space-y-3">
+                                    <label class="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-3 rounded-xl hover:from-blue-500 hover:to-indigo-500 flex items-center justify-center gap-2 w-full transition-all shadow-md font-bold text-sm">
+                                        <i data-lucide="upload-cloud" class="w-5 h-5"></i> อัปโหลดรูปจากมือถือ/คอม
+                                        <input type="file" id="f_imageUpload" class="hidden" accept="image/*">
+                                    </label>
+                                    <div class="flex items-center gap-2 opacity-70">
+                                        <hr class="flex-1 border-purple-500/30">
+                                        <span class="text-xs text-purple-200">หรือ</span>
+                                        <hr class="flex-1 border-purple-500/30">
+                                    </div>
+                                    <input type="text" id="f_imageUrl" placeholder="ใส่ Emoji (เช่น 🌍) หรือ Link รูปภาพ" class="w-full bg-purple-950/80 rounded-xl p-3 text-white border border-purple-400/50 focus:border-blue-400 outline-none text-sm">
+                                </div>
                             </div>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-purple-200 mb-1.5">คำทำนายดวงชะตา</label>
-                            <textarea id="f_fortuneText" rows="2" placeholder="ดวงของคุณวันนี้..." class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all"></textarea>
+                        <div class="md:col-span-2 stagger-3">
+                            <label class="block text-sm font-bold text-blue-200 mb-1.5">คำทำนายดวงชะตา (Fortune)</label>
+                            <textarea id="f_fortuneText" rows="2" placeholder="ดวงของคุณวันนี้..." class="w-full bg-purple-950/80 rounded-xl p-3 md:p-3.5 text-white border border-purple-400/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all"></textarea>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-purple-200 mb-1.5">ภารกิจรักษ์โลก</label>
-                            <textarea id="f_missionText" rows="2" placeholder="พกแก้วน้ำส่วนตัว..." class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all"></textarea>
+                        <div class="md:col-span-2 stagger-3">
+                            <label class="block text-sm font-bold text-green-300 mb-1.5">ภารกิจรักษ์โลก (Mission)</label>
+                            <textarea id="f_missionText" rows="2" placeholder="พกแก้วน้ำส่วนตัว..." class="w-full bg-purple-950/80 rounded-xl p-3 md:p-3.5 text-green-100 border border-green-500/40 focus:border-green-400 focus:ring-1 focus:ring-green-400 outline-none transition-all"></textarea>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-purple-200 mb-1.5">เคล็ดลับเสริมดวง (Lucky Tip)</label>
-                            <input type="text" id="f_luckyTip" placeholder="เช่น ใส่เสื้อสีเขียว" class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                        <div class="stagger-4">
+                            <label class="block text-sm font-bold text-yellow-300 mb-1.5">เคล็ดลับเสริมดวง (Lucky Tip)</label>
+                            <input type="text" id="f_luckyTip" placeholder="เช่น ใส่เสื้อสีเขียว" class="w-full bg-purple-950/80 rounded-xl p-3 md:p-3.5 text-yellow-100 border border-yellow-500/40 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-purple-200 mb-1.5">แต้มบุญที่จะได้รับ</label>
-                            <input type="number" id="f_pointsReward" value="20" class="w-full bg-purple-950/50 rounded-xl p-3 text-yellow-300 font-bold border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                        <div class="stagger-4">
+                            <label class="block text-sm font-bold text-blue-200 mb-1.5">แต้มบุญที่จะได้รับ</label>
+                            <input type="number" id="f_pointsReward" value="20" class="w-full bg-purple-950/80 rounded-xl p-3 md:p-3.5 text-yellow-300 font-bold border border-purple-400/50 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none transition-all text-lg">
                         </div>
                     </div>
-                    <button id="saveCardBtn" class="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 text-purple-900 font-bold text-lg py-4 rounded-xl transition-all shadow-[0_5px_15px_rgba(16,185,129,0.4)] mt-6 flex justify-center items-center gap-2">
+                    <button id="saveCardBtn" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 active:scale-95 text-white font-bold text-lg py-4 rounded-xl transition-all shadow-[0_5px_15px_rgba(59,130,246,0.4)] mt-6 flex justify-center items-center gap-2 stagger-4 font-mali">
                         <i data-lucide="save" class="w-5 h-5"></i> บันทึกไพ่ลงในสำรับ
                     </button>
                 </div>
 
                 <!-- Card List -->
-                <div id="adminCardList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div id="adminCardList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 pb-10">
                     <!-- Cards injected here -->
                 </div>
             </div>
@@ -294,15 +321,15 @@
     </main>
 
     <!-- Custom Modal -->
-    <div id="customModal" class="fixed inset-0 bg-black/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="glass-panel border-2 border-yellow-400/50 rounded-3xl p-8 max-w-sm w-full shadow-[0_0_50px_rgba(253,224,71,0.2)] transform scale-95 transition-transform duration-300" id="modalContent">
-            <h3 id="modalTitle" class="text-2xl font-bold font-mali text-yellow-400 mb-3 flex items-center gap-2">
+    <div id="customModal" class="fixed inset-0 bg-black/80 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+        <div class="glass-panel border-2 border-yellow-400/50 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-[0_0_50px_rgba(253,224,71,0.2)] animate-slide-up" id="modalContent">
+            <h3 id="modalTitle" class="text-xl md:text-2xl font-bold font-mali text-yellow-400 mb-3 flex items-center gap-2">
                 <i data-lucide="bell-ring" class="w-6 h-6"></i> ข้อความ
             </h3>
-            <p id="modalMessage" class="text-purple-100 mb-8 text-lg leading-relaxed"></p>
+            <p id="modalMessage" class="text-purple-100 mb-8 text-base md:text-lg leading-relaxed"></p>
             <div class="flex justify-end gap-3">
-                <button id="modalCancel" class="px-5 py-2.5 rounded-xl bg-purple-900/80 text-white hover:bg-purple-800 transition-colors hidden font-medium">ยกเลิก</button>
-                <button id="modalConfirm" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 font-bold hover:scale-105 transition-transform shadow-md">ตกลง</button>
+                <button id="modalCancel" class="px-5 py-2.5 rounded-xl bg-purple-900/80 text-white hover:bg-purple-800 active:bg-purple-700 transition-colors hidden font-medium text-sm md:text-base">ยกเลิก</button>
+                <button id="modalConfirm" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 font-bold hover:scale-105 active:scale-95 transition-transform shadow-md text-sm md:text-base">ตกลง</button>
             </div>
         </div>
     </div>
@@ -329,14 +356,15 @@
             activeTab: 'home', 
             timerInterval: null, 
             missionProofImage: null,
-            // ข้อมูลสำหรับ Leaderboard และ Dashboard
             allProfiles: [],
             allDraws: [],
-            adminTabMode: 'dashboard'
+            adminTabMode: 'dashboard',
+            editingCardId: null // สำหรับจำ ID ไพ่ที่กำลังกดแก้ไข
         };
 
         const FAKE_DOMAIN = '@sd-oracle.local';
 
+        // ... (Default Cards remain same) ...
         const DEFAULT_CARDS = [
             { "sdgTopic": 13, title: "SDG 13: Climate Action", "fortuneText": "ดวงคุณวันนี้มีพลังงานความร้อนแฝงอยู่ ระวังอารมณ์หงุดหงิดเหมือนสภาพอากาศนะ!", "missionText": "พกแก้วน้ำส่วนตัวหรือถุงผ้าเพื่อลดขยะพลาสติก 1 ชิ้น", "luckyTip": "สวมเสื้อผ้าสีเขียวหรือฟ้าเพื่อความร่มเย็น", "pointsReward": 20, "imageUrl": "🌍", "isActive": true },
             { "sdgTopic": 3, title: "SDG 3: Good Health", "fortuneText": "ไพ่เตือนว่าช่วงนี้ลุยงานหนักเกินไป ร่างกายกำลังประท้วงเงียบๆ ต้องการการฟื้นฟูด่วนจ้า", "missionText": "ดื่มน้ำให้ครบ 8 แก้ว และลุกเดินยืดเส้นยืดสาย 15 นาที", "luckyTip": "กินผลไม้สีส้มหรือสีเหลืองเพิ่มความสดใส", "pointsReward": 15, "imageUrl": "❤️", "isActive": true },
@@ -366,7 +394,7 @@
                         state.user = null;
                         document.getElementById('authOverlay').classList.remove('hidden');
                         document.getElementById('logoutBtn').classList.add('hidden');
-                        document.getElementById('pointsText').innerText = 'แต้มบุญ: 0';
+                        document.getElementById('pointsText').innerText = '0';
                         document.getElementById('homeContainer').innerHTML = ''; 
                         switchTab('home');
                     } else if (session) {
@@ -399,12 +427,12 @@
             const errEl = document.getElementById('authError');
             
             if (!empId) {
-                errEl.innerText = 'กรุณากรอกรหัสพนักงานด้วยจ้า';
+                errEl.innerText = '⚠️ กรุณากรอกรหัสพนักงานด้วยจ้า';
                 errEl.classList.remove('hidden'); return;
             }
             
             const btn = document.getElementById('btnEnter');
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>'; lucide.createIcons();
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i>'; lucide.createIcons();
             
             const fakeEmail = `${empId.toLowerCase()}${FAKE_DOMAIN}`;
             const staticPassword = 'SD-Oracle-Secret-Pass-2026!'; 
@@ -416,14 +444,14 @@
                 if (signUpError) {
                     errEl.innerText = 'เกิดข้อผิดพลาด (แอดมินอย่าลืมปิด Confirm Email ใน Supabase นะ)';
                     errEl.classList.remove('hidden');
-                    btn.innerText = 'เข้าสู่ระบบ / เริ่มต้นใช้งาน';
+                    btn.innerText = 'เข้าสู่ระบบ / เริ่มดูดวง';
                     return;
                 }
-                showModal('ยินดีต้อนรับ!', 'นี่คือการเข้าใช้งานครั้งแรกของรหัสนี้ แม่หมอเตรียมไพ่ไว้ให้แล้วจ้า');
+                showModal('ยินดีต้อนรับสู่แม่หมอ SD!', 'นี่คือการใช้งานครั้งแรกของรหัสนี้ แม่หมอเตรียมสำรับไพ่พิทักษ์โลกไว้ให้แล้วจ้า 🌍✨');
             } else {
                 errEl.classList.add('hidden');
             }
-            btn.innerText = 'เข้าสู่ระบบ / เริ่มต้นใช้งาน';
+            btn.innerText = 'เข้าสู่ระบบ / เริ่มดูดวง';
         }
 
         async function handleLogout() {
@@ -457,19 +485,18 @@
                     state.points = 0;
                 } else if (profile) { 
                     state.points = profile.points || 0; 
-                    // อัปเดต emp_id ถ้ารหัสเก่ายังไม่มี
                     if(!profile.emp_id) {
                         await supabaseClient.from('profiles').update({ emp_id: empIdStr }).eq('id', state.user.id);
                     }
                 }
-                document.getElementById('pointsText').innerText = `แต้มบุญ: ${state.points}`;
+                document.getElementById('pointsText').innerText = `${state.points}`;
 
                 // Fetch ALL Profiles (สำหรับจัดอันดับ)
                 const { data: allProfiles } = await supabaseClient.from('profiles').select('*').order('points', { ascending: false });
                 state.allProfiles = allProfiles || [];
 
-                // Fetch ALL Draws (สำหรับ Dashboard) - ดึงมาทั้งหมดถ้า RLS อนุญาต
-                const { data: allDraws } = await supabaseClient.from('daily_draws').select('id, user_id, status');
+                // Fetch ALL Draws (สำหรับ Dashboard)
+                const { data: allDraws } = await supabaseClient.from('daily_draws').select('id, user_id, status, drawnAt');
                 state.allDraws = allDraws || [];
 
                 renderAll();
@@ -511,8 +538,8 @@
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 const isActive = btn.dataset.tab === state.activeTab;
                 btn.className = isActive 
-                    ? "tab-btn flex shrink-0 items-center space-x-2 px-6 py-3.5 rounded-full font-bold font-mali transition-all duration-300 bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 shadow-[0_5px_20px_rgba(253,224,71,0.5)] transform scale-105 whitespace-nowrap"
-                    : "tab-btn flex shrink-0 items-center space-x-2 px-6 py-3.5 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap";
+                    ? "tab-btn snap-center flex shrink-0 items-center space-x-2 px-5 md:px-7 py-3 rounded-full font-bold font-mali transition-all duration-300 bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 shadow-[0_5px_15px_rgba(253,224,71,0.4)] transform scale-105 whitespace-nowrap text-sm md:text-base"
+                    : "tab-btn snap-center flex shrink-0 items-center space-x-2 px-5 md:px-7 py-3 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap text-sm md:text-base";
             });
 
             const adminTabBtn = document.getElementById('adminTabBtn');
@@ -521,7 +548,7 @@
             lucide.createIcons();
         }
 
-        function switchTab(tabId) { state.activeTab = tabId; renderAll(); }
+        function switchTab(tabId) { state.activeTab = tabId; renderAll(); window.scrollTo({top: 0, behavior: 'smooth'}); }
 
         function renderHome() {
             const container = document.getElementById('homeContainer');
@@ -529,20 +556,21 @@
 
             if (!activeDraw || activeDraw.status === 'expired') {
                 container.innerHTML = `
-                    <div class="text-center relative z-10 w-full">
-                        <div class="crystal-ball mx-auto mb-10 floating">
-                            <span class="text-7xl drop-shadow-2xl z-10">🌍</span>
+                    <div class="text-center relative z-10 w-full stagger-1">
+                        <div class="crystal-ball mx-auto mb-8 floating scale-90 md:scale-100">
+                            <span class="text-6xl md:text-7xl drop-shadow-2xl z-10">🌍</span>
                         </div>
-                        <h2 class="text-3xl md:text-4xl font-bold font-mali mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 pb-1">ดวงชะตาความยั่งยืนของคุณคืออะไร?</h2>
-                        <p class="text-purple-200 mb-10 max-w-lg mx-auto text-lg leading-relaxed">ให้แม่หมอช่วยเปิดไพ่ 1 ใบ เพื่อรับคำทำนายรายวัน<br>และทำภารกิจพิทักษ์โลกเพื่อสะสมแต้มบุญกันเถอะ!</p>
-                        <button id="btnDrawCard" class="btn-magic bg-gradient-to-b from-[#FFF59D] to-[#FBC02D] border-2 border-white text-[#4A1E6D] text-2xl font-bold font-mali px-10 py-5 rounded-full flex items-center justify-center mx-auto gap-3">
-                            <i data-lucide="sparkles" class="w-7 h-7"></i> เปิดไพ่ทำนายดวงวันนี้
+                        <h2 class="text-2xl md:text-4xl font-bold font-mali mb-3 md:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 pb-1">ดวงชะตาความยั่งยืนวันนี้คืออะไร?</h2>
+                        <p class="text-purple-200 mb-8 max-w-lg mx-auto text-sm md:text-lg leading-relaxed px-4">ให้แม่หมอช่วยเปิดไพ่ 1 ใบ เพื่อรับคำทำนายรายวัน<br class="hidden md:block">และทำภารกิจพิทักษ์โลกเพื่อสะสมแต้มบุญกันเถอะ!</p>
+                        <button id="btnDrawCard" class="btn-magic bg-gradient-to-b from-[#FFF59D] to-[#FBC02D] active:scale-95 border-2 border-white text-[#4A1E6D] text-xl md:text-2xl font-bold font-mali px-8 py-4 md:px-10 md:py-5 rounded-full flex items-center justify-center mx-auto gap-3 shadow-xl touch-manipulation">
+                            <i data-lucide="sparkles" class="w-6 h-6 md:w-7 md:h-7"></i> เปิดไพ่ทำนายดวงวันนี้
                         </button>
                     </div>
                 `;
             } else {
                 const card = state.cards.find(c => c.id === activeDraw.cardId);
                 
+                // ระบบฟื้นฟูอัตโนมัติ (Auto-Recovery) กรณีไพ่บั๊กหรือถูกลบ
                 if (!card) { 
                     if(!SUPABASE_URL.includes('YOUR_SUPABASE') && activeDraw.id !== 'mock-draw') {
                         supabaseClient.from('daily_draws').delete().eq('id', activeDraw.id).then(() => fetchData());
@@ -552,8 +580,8 @@
                     }
                     container.innerHTML = `
                         <div class="flex flex-col items-center justify-center py-10 text-center w-full relative z-10">
-                            <i data-lucide="loader-2" class="w-12 h-12 text-yellow-400 animate-spin mb-4 mx-auto"></i>
-                            <p class="text-xl font-bold font-mali text-yellow-200">กำลังรีเซ็ตพลังงานไพ่ที่สูญหาย...</p>
+                            <i data-lucide="loader-2" class="w-10 h-10 md:w-12 md:h-12 text-yellow-400 animate-spin mb-4 mx-auto"></i>
+                            <p class="text-lg md:text-xl font-bold font-mali text-yellow-200">กำลังรีเซ็ตพลังงานไพ่ที่สูญหาย...</p>
                         </div>
                     `;
                     lucide.createIcons();
@@ -561,82 +589,94 @@
                 }
 
                 let imageElement = (card.imageUrl && (card.imageUrl.startsWith('data:image') || card.imageUrl.startsWith('http')))
-                    ? `<img src="${card.imageUrl}" class="w-full h-[220px] object-cover rounded-lg border-2 border-yellow-600/30" alt="Card Image">`
-                    : `<div class="text-8xl py-10 drop-shadow-lg">${card.imageUrl || '🃏'}</div>`;
+                    ? `<img src="${card.imageUrl}" class="w-full h-full object-cover rounded-lg border-2 border-yellow-600/30" alt="Card Image">`
+                    : `<div class="text-7xl md:text-8xl py-6 drop-shadow-lg">${card.imageUrl || '🃏'}</div>`;
 
                 let statusHTML = activeDraw.status === 'pending' ? `
-                    <div class="pt-6 border-t border-purple-400/30">
-                        <div class="flex flex-col sm:flex-row items-center justify-between mb-5 gap-3">
-                            <span class="text-purple-200 flex items-center gap-2 bg-purple-900/50 px-4 py-2 rounded-full border border-purple-500/50">
-                                <i data-lucide="hourglass" class="w-5 h-5 text-yellow-400"></i> เวลาเหลือ: <strong class="text-yellow-300 tracking-wider" id="countdownTimer">คำนวณ...</strong>
+                    <div class="pt-6 border-t border-purple-400/30 stagger-4">
+                        <div class="flex items-center justify-between mb-5 bg-purple-900/40 p-3 rounded-xl border border-purple-500/30">
+                            <span class="text-purple-200 flex items-center gap-2 text-sm md:text-base font-medium">
+                                <i data-lucide="hourglass" class="w-5 h-5 text-yellow-400 animate-pulse"></i> เวลาเหลือ: <strong class="text-yellow-300 font-bold tracking-wider" id="countdownTimer">คำนวณ...</strong>
                             </span>
                         </div>
                         
-                        <div class="bg-purple-950/40 p-4 rounded-2xl border border-purple-500/30 mb-5 text-left">
-                            <label class="block text-sm font-bold font-mali text-yellow-300 mb-2 flex items-center gap-2">
-                                <i data-lucide="camera" class="w-4 h-4"></i> แนบรูปถ่ายยืนยัน (ไม่บังคับ)
-                            </label>
-                            <div class="flex items-center gap-3">
-                                <label class="cursor-pointer bg-purple-800/80 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl border border-purple-500/50 flex items-center gap-2 transition-colors text-sm shadow-md">
-                                    <i data-lucide="image-plus" class="w-4 h-4"></i> เลือกรูปภาพ
-                                    <input type="file" id="missionImageUpload" class="hidden" accept="image/*">
+                        <!-- แก้ไข: เพิ่มช่องกรอกข้อความเล่าสู่กันฟัง -->
+                        <div class="bg-gradient-to-br from-purple-950/80 to-indigo-950/80 p-4 md:p-5 rounded-2xl border border-purple-400/40 mb-5 text-left space-y-4 shadow-inner">
+                            
+                            <div>
+                                <label class="block text-sm md:text-base font-bold font-mali text-yellow-300 mb-2 flex items-center gap-2">
+                                    <i data-lucide="edit-3" class="w-4 h-4 md:w-5 md:h-5 text-yellow-400"></i> เล่าสู่กันฟัง (คุณทำอะไรไปบ้าง?) <span class="text-red-400">*</span>
                                 </label>
-                                <div id="missionImagePreviewContainer" class="hidden relative">
-                                    <img id="missionImagePreview" src="" class="w-12 h-12 object-cover rounded-lg border border-yellow-400/50 shadow-md">
-                                    <button id="btnRemoveMissionImage" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 shadow transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                <textarea id="missionNoteInput" rows="2" placeholder="ตัวอย่าง: วันนี้พกถุงผ้าไปซื้อของที่ร้านสะดวกซื้อ..." class="w-full bg-purple-900/60 rounded-xl p-3 md:p-4 text-white placeholder-purple-300/50 border border-purple-500/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none text-sm md:text-base transition-all"></textarea>
+                            </div>
+
+                            <div class="border-t border-purple-500/30 pt-4">
+                                <label class="block text-sm font-bold font-mali text-purple-200 mb-2 flex items-center gap-2">
+                                    <i data-lucide="camera" class="w-4 h-4"></i> แนบรูปถ่ายยืนยัน (ถ้ามีจะดีมาก)
+                                </label>
+                                <div class="flex items-center gap-3">
+                                    <label class="cursor-pointer bg-purple-800/80 hover:bg-purple-700 active:scale-95 text-white px-4 py-2.5 md:py-3 rounded-xl border border-purple-500/50 flex items-center justify-center gap-2 transition-all text-sm font-bold shadow-md w-full md:w-auto text-center touch-manipulation">
+                                        <i data-lucide="image-plus" class="w-5 h-5"></i> เลือกรูปภาพ
+                                        <input type="file" id="missionImageUpload" class="hidden" accept="image/*">
+                                    </label>
+                                    <div id="missionImagePreviewContainer" class="hidden relative shrink-0">
+                                        <img id="missionImagePreview" src="" class="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg border-2 border-yellow-400 shadow-md">
+                                        <button id="btnRemoveMissionImage" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-colors active:scale-90 touch-manipulation"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                    </div>
+                                    <span id="missionImageText" class="text-xs md:text-sm text-purple-300/70 hidden md:block">ยังไม่ได้เลือกรูปภาพ</span>
                                 </div>
-                                <span id="missionImageText" class="text-xs text-purple-300/70">ยังไม่ได้เลือกรูปภาพ</span>
                             </div>
                         </div>
 
-                        <button id="btnCompleteMission" data-id="${activeDraw.id}" data-pts="${card.pointsReward}" class="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 text-purple-950 font-bold text-xl font-mali py-4 rounded-2xl shadow-[0_5px_15px_rgba(16,185,129,0.4)] flex justify-center items-center gap-2 transition-transform hover:scale-[1.02]">
-                            <i data-lucide="check-circle" class="w-6 h-6"></i> ยืนยันการทำภารกิจ
+                        <button id="btnCompleteMission" data-id="${activeDraw.id}" data-pts="${card.pointsReward}" class="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 active:scale-95 text-purple-950 font-bold text-lg md:text-xl font-mali py-4 rounded-2xl shadow-[0_5px_15px_rgba(16,185,129,0.4)] flex justify-center items-center gap-2 transition-all touch-manipulation">
+                            <i data-lucide="check-circle-2" class="w-6 h-6 md:w-7 md:h-7"></i> ยืนยันการทำภารกิจสำเร็จ
                         </button>
                     </div>
                 ` : `
-                    <div class="pt-6 border-t border-purple-400/30 text-center">
-                        <div class="bg-gradient-to-b from-green-500/20 to-emerald-600/20 text-green-300 p-6 rounded-2xl border border-green-400/40 flex flex-col items-center gap-3 backdrop-blur-sm">
-                            <div class="bg-green-400 text-purple-900 rounded-full p-2 mb-1"><i data-lucide="check" class="w-8 h-8 stroke-[3]"></i></div>
-                            <h3 class="text-2xl font-bold font-mali text-green-400">ยอดเยี่ยม! ภารกิจสำเร็จ</h3>
-                            <p class="text-green-100 text-lg">คุณได้รับ <strong class="text-yellow-300">${card.pointsReward} แต้มบุญ</strong><br>กลับมาเปิดไพ่ใหม่ได้ในวันพรุ่งนี้นะจ๊ะ</p>
+                    <div class="pt-6 border-t border-purple-400/30 text-center stagger-4">
+                        <div class="bg-gradient-to-b from-green-500/20 to-emerald-600/20 text-green-300 p-5 md:p-8 rounded-3xl border border-green-400/40 flex flex-col items-center gap-3 md:gap-4 backdrop-blur-sm shadow-inner relative overflow-hidden">
+                            <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">🌟</div>
+                            <div class="bg-green-400 text-purple-900 rounded-full p-3 mb-1 shadow-[0_0_20px_rgba(74,222,128,0.5)]"><i data-lucide="check" class="w-8 h-8 md:w-10 md:h-10 stroke-[3]"></i></div>
+                            <h3 class="text-2xl md:text-3xl font-bold font-mali text-green-400 drop-shadow-md">ยอดเยี่ยม! ภารกิจสำเร็จ</h3>
+                            <p class="text-green-100 text-base md:text-lg">คุณได้รับ <strong class="text-yellow-300 font-bold text-xl md:text-2xl">${card.pointsReward} แต้มบุญ</strong><br>กลับมาเปิดไพ่ใบใหม่ได้ในวันพรุ่งนี้นะจ๊ะ</p>
                         </div>
                     </div>
                 `;
 
                 container.innerHTML = `
-                    <div class="w-full flex flex-col md:flex-row gap-10 items-center md:items-start relative z-10">
-                        <div class="w-full md:w-5/12 flex flex-col items-center">
-                            <div class="tarot-card w-full max-w-[300px] aspect-[2/3] p-4 flex flex-col relative text-gray-800">
-                                <div class="absolute -top-4 -right-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-purple-900 font-bold px-4 py-1.5 rounded-full text-sm z-10 shadow-lg border-2 border-white transform rotate-6 font-mali">
+                    <div class="w-full flex flex-col lg:flex-row gap-8 lg:gap-10 items-center lg:items-start relative z-10">
+                        <div class="w-full lg:w-5/12 flex flex-col items-center stagger-1">
+                            <div class="tarot-card w-full max-w-[280px] md:max-w-[320px] aspect-[2/3] p-3 md:p-4 flex flex-col relative text-gray-800 transition-transform hover:scale-[1.02] duration-300">
+                                <div class="absolute -top-3 -right-3 md:-top-4 md:-right-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-purple-900 font-bold px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm z-10 shadow-lg border-2 border-white transform rotate-6 font-mali">
                                     SDG ${card.sdgTopic}
                                 </div>
-                                <div class="border-2 border-yellow-600/20 rounded-xl p-2 flex-1 flex flex-col">
-                                    <div class="flex-1 flex items-center justify-center bg-gradient-to-b from-blue-50 to-white rounded-lg mb-3 shadow-inner overflow-hidden">
+                                <div class="border border-yellow-600/30 rounded-xl p-2 md:p-3 flex-1 flex flex-col bg-white/50 backdrop-blur-sm">
+                                    <div class="flex-1 flex items-center justify-center bg-gradient-to-b from-blue-50 to-white rounded-lg mb-3 shadow-inner overflow-hidden relative">
                                         ${imageElement}
+                                        <div class="absolute inset-0 shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] pointer-events-none"></div>
                                     </div>
-                                    <div class="bg-yellow-100/50 rounded-lg p-2 text-center border border-yellow-600/20">
-                                        <h3 class="font-bold font-mali text-lg leading-tight text-yellow-900">${card.title}</h3>
+                                    <div class="bg-gradient-to-b from-yellow-50 to-yellow-100/50 rounded-lg p-2 md:p-3 text-center border border-yellow-600/20 shadow-sm">
+                                        <h3 class="font-bold font-mali text-base md:text-lg leading-tight text-yellow-900 line-clamp-2">${card.title}</h3>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="w-full md:w-7/12 space-y-6">
-                            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
-                                <div class="absolute top-0 left-0 w-2 bg-yellow-400 h-full"></div>
-                                <h2 class="text-2xl font-bold font-mali text-yellow-300 flex items-center gap-2 mb-3">
-                                    <i data-lucide="sparkles" class="w-6 h-6 text-yellow-400"></i> คำทำนายจากแม่หมอ
+                        <div class="w-full lg:w-7/12 space-y-5 md:space-y-6">
+                            <div class="glass-card p-5 md:p-6 rounded-2xl relative overflow-hidden group stagger-2 border-l-4 border-l-yellow-400 shadow-md bg-white/5">
+                                <h2 class="text-xl md:text-2xl font-bold font-mali text-yellow-300 flex items-center gap-2 mb-3 drop-shadow-sm">
+                                    <i data-lucide="sparkles" class="w-5 h-5 md:w-6 md:h-6 text-yellow-400"></i> คำทำนายจากแม่หมอ
                                 </h2>
-                                <p class="text-lg text-purple-50 leading-relaxed font-light">"${card.fortuneText}"</p>
+                                <p class="text-base md:text-lg text-purple-50 leading-relaxed font-light">"${card.fortuneText}"</p>
                             </div>
                             
-                            <div class="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 p-6 rounded-2xl border border-indigo-400/30 shadow-lg relative overflow-hidden">
-                                <div class="absolute -right-4 -top-4 text-6xl opacity-10 rotate-12">🌿</div>
-                                <h3 class="text-xl font-bold font-mali text-green-300 mb-3 flex items-center gap-2">
-                                    <i data-lucide="target" class="w-6 h-6"></i> ภารกิจเสริมดวง (รับ ${card.pointsReward} แต้ม)
+                            <div class="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 p-5 md:p-6 rounded-2xl border border-indigo-400/30 shadow-lg relative overflow-hidden stagger-3">
+                                <div class="absolute -right-2 -top-2 text-6xl md:text-7xl opacity-10 rotate-12 pointer-events-none">🌿</div>
+                                <h3 class="text-lg md:text-xl font-bold font-mali text-green-300 mb-3 flex items-center gap-2 drop-shadow-sm">
+                                    <i data-lucide="target" class="w-5 h-5 md:w-6 md:h-6"></i> ภารกิจเสริมดวง (รับ ${card.pointsReward} แต้ม)
                                 </h3>
-                                <p class="text-white text-lg mb-4 relative z-10">${card.missionText}</p>
-                                <div class="inline-block bg-yellow-400/10 border border-yellow-400/30 text-yellow-200 px-4 py-2 rounded-xl text-sm font-medium backdrop-blur-sm relative z-10">
-                                    <span class="text-yellow-400 mr-1">💡 เคล็ดลับ:</span> ${card.luckyTip}
+                                <p class="text-white text-base md:text-lg mb-4 relative z-10">${card.missionText}</p>
+                                <div class="inline-block bg-yellow-400/10 border border-yellow-400/30 text-yellow-200 px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-medium backdrop-blur-sm relative z-10">
+                                    <span class="text-yellow-400 mr-1"><i data-lucide="lightbulb" class="inline w-3 h-3 md:w-4 md:h-4 -mt-1"></i> เคล็ดลับ:</span> ${card.luckyTip}
                                 </div>
                             </div>
                             ${statusHTML}
@@ -657,36 +697,37 @@
                 return;
             }
 
-            let html = '<div class="space-y-3">';
+            let html = '<div class="space-y-3 pb-6">';
             state.allProfiles.forEach((profile, index) => {
                 let rankClass = "bg-purple-950/50 border-purple-500/30";
-                let rankBadge = `<span class="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-purple-900/80 text-purple-300">${index + 1}</span>`;
+                let rankBadge = `<span class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold bg-purple-900/80 text-purple-300 text-sm md:text-base">${index + 1}</span>`;
+                let animationClass = index < 5 ? `stagger-${index + 1}` : 'animate-fade-in';
                 
                 if (index === 0) {
                     rankClass = "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-400/50 shadow-[0_0_15px_rgba(253,224,71,0.2)]";
-                    rankBadge = `<span class="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-yellow-400 text-purple-900 text-lg shadow-md">👑</span>`;
+                    rankBadge = `<span class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold bg-yellow-400 text-purple-900 text-xl md:text-2xl shadow-md floating">👑</span>`;
                 } else if (index === 1) {
                     rankClass = "bg-gray-300/10 border-gray-300/50";
-                    rankBadge = `<span class="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-gray-300 text-gray-800 text-lg shadow-md">🥈</span>`;
+                    rankBadge = `<span class="w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold bg-gray-300 text-gray-800 text-lg md:text-xl shadow-md">🥈</span>`;
                 } else if (index === 2) {
                     rankClass = "bg-orange-400/10 border-orange-400/50";
-                    rankBadge = `<span class="w-8 h-8 rounded-full flex items-center justify-center font-bold bg-orange-400 text-orange-900 text-lg shadow-md">🥉</span>`;
+                    rankBadge = `<span class="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center font-bold bg-orange-400 text-orange-900 text-base md:text-lg shadow-md">🥉</span>`;
                 }
 
                 const empDisplay = profile.emp_id || (profile.id === state.user?.id ? 'คุณ (ยังไม่อัปเดตรหัส)' : 'พนักงานนิรนาม');
                 const isMe = profile.id === state.user?.id;
 
                 html += `
-                    <div class="flex items-center justify-between p-4 rounded-2xl border transition-transform hover:scale-[1.01] ${rankClass} ${isMe ? 'ring-2 ring-yellow-400' : ''}">
-                        <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-between p-3 md:p-4 rounded-2xl border transition-transform hover:scale-[1.01] ${rankClass} ${isMe ? 'ring-2 ring-yellow-400 bg-purple-800/60' : ''} ${animationClass}">
+                        <div class="flex items-center gap-3 md:gap-4">
                             ${rankBadge}
                             <div>
-                                <h4 class="font-bold text-lg font-mali ${isMe ? 'text-yellow-300' : 'text-white'}">รหัส: ${empDisplay} ${isMe ? '<span class="text-xs ml-1 bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-400/50">คุณ</span>' : ''}</h4>
+                                <h4 class="font-bold text-base md:text-lg font-mali ${isMe ? 'text-yellow-300' : 'text-white'} truncate max-w-[150px] md:max-w-none">รหัส: ${empDisplay} ${isMe ? '<span class="text-[10px] md:text-xs ml-1 bg-yellow-400 text-purple-900 px-2 py-0.5 rounded-full font-bold">คุณ</span>' : ''}</h4>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <div class="font-bold text-xl text-yellow-400 flex items-center gap-1 justify-end"><i data-lucide="sparkles" class="w-4 h-4"></i> ${profile.points}</div>
-                            <div class="text-xs text-purple-300">แต้มบุญ</div>
+                        <div class="text-right shrink-0">
+                            <div class="font-bold text-lg md:text-xl text-yellow-400 flex items-center gap-1 justify-end"><i data-lucide="sparkles" class="w-3 h-3 md:w-4 md:h-4 text-yellow-500"></i> ${profile.points}</div>
+                            <div class="text-[10px] md:text-xs text-purple-300 uppercase tracking-widest">แต้มบุญ</div>
                         </div>
                     </div>
                 `;
@@ -704,14 +745,14 @@
             const viewCards = document.getElementById('adminCardsView');
 
             if (state.adminTabMode === 'dashboard') {
-                btnDash.className = "flex-1 px-5 py-2 rounded-full font-bold text-sm transition-colors bg-purple-500/50 text-white shadow-sm";
-                btnCards.className = "flex-1 px-5 py-2 rounded-full font-bold text-sm transition-colors text-purple-300 hover:text-white";
+                btnDash.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all bg-red-500/80 text-white shadow-md touch-manipulation";
+                btnCards.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all text-purple-300 hover:text-white bg-transparent touch-manipulation";
                 viewDash.classList.remove('hidden');
                 viewCards.classList.add('hidden');
                 renderAdminDashboard();
             } else {
-                btnCards.className = "flex-1 px-5 py-2 rounded-full font-bold text-sm transition-colors bg-purple-500/50 text-white shadow-sm";
-                btnDash.className = "flex-1 px-5 py-2 rounded-full font-bold text-sm transition-colors text-purple-300 hover:text-white";
+                btnCards.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all bg-red-500/80 text-white shadow-md touch-manipulation";
+                btnDash.className = "flex-1 px-4 md:px-5 py-2.5 md:py-2 rounded-full font-bold text-sm transition-all text-purple-300 hover:text-white bg-transparent touch-manipulation";
                 viewCards.classList.remove('hidden');
                 viewDash.classList.add('hidden');
                 renderAdminCards();
@@ -726,45 +767,45 @@
             const totalDraws = state.allDraws.length;
             const completedMissions = state.allDraws.filter(d => d.status === 'completed').length;
             
-            // หาคนที่ Active วันนี้ (อนุมานว่าเป็น Online ล่าสุด)
+            // หาคนที่ Active วันนี้
             const todayStart = new Date().setHours(0,0,0,0);
             const activeTodayDraws = state.allDraws.filter(d => d.drawnAt >= todayStart);
             const activeTodayUsersCount = new Set(activeTodayDraws.map(d => d.user_id)).size;
 
             let html = `
                 <!-- สรุปสถิติ 3 ช่อง -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-gradient-to-br from-blue-900/60 to-purple-900/60 p-5 rounded-2xl border border-blue-400/30 flex items-center gap-4 shadow-lg">
-                        <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-300"><i data-lucide="users" class="w-6 h-6"></i></div>
-                        <div><div class="text-sm text-blue-200">ผู้ใช้งานทั้งหมด</div><div class="text-2xl font-bold text-white">${totalUsers} <span class="text-sm font-normal text-purple-300">คน</span></div></div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 stagger-1">
+                    <div class="bg-gradient-to-br from-blue-900/60 to-purple-900/60 p-4 md:p-5 rounded-2xl border border-blue-400/30 flex items-center gap-4 shadow-lg">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-300 shrink-0"><i data-lucide="users" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                        <div><div class="text-xs md:text-sm text-blue-200">ผู้ใช้งานทั้งหมด</div><div class="text-xl md:text-2xl font-bold text-white">${totalUsers} <span class="text-xs md:text-sm font-normal text-purple-300">คน</span></div></div>
                     </div>
-                    <div class="bg-gradient-to-br from-yellow-900/60 to-orange-900/60 p-5 rounded-2xl border border-yellow-400/30 flex items-center gap-4 shadow-lg">
-                        <div class="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-300"><i data-lucide="activity" class="w-6 h-6"></i></div>
-                        <div><div class="text-sm text-yellow-200">เข้าเปิดไพ่วันนี้</div><div class="text-2xl font-bold text-white">${activeTodayUsersCount} <span class="text-sm font-normal text-purple-300">คน</span></div></div>
+                    <div class="bg-gradient-to-br from-yellow-900/60 to-orange-900/60 p-4 md:p-5 rounded-2xl border border-yellow-400/30 flex items-center gap-4 shadow-lg">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-300 shrink-0"><i data-lucide="activity" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                        <div><div class="text-xs md:text-sm text-yellow-200">เข้าเปิดไพ่วันนี้</div><div class="text-xl md:text-2xl font-bold text-white">${activeTodayUsersCount} <span class="text-xs md:text-sm font-normal text-purple-300">คน</span></div></div>
                     </div>
-                    <div class="bg-gradient-to-br from-green-900/60 to-emerald-900/60 p-5 rounded-2xl border border-green-400/30 flex items-center gap-4 shadow-lg">
-                        <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center text-green-300"><i data-lucide="check-circle-2" class="w-6 h-6"></i></div>
-                        <div><div class="text-sm text-green-200">ภารกิจสำเร็จรวม</div><div class="text-2xl font-bold text-white">${completedMissions} <span class="text-sm font-normal text-purple-300">ครั้ง</span></div></div>
+                    <div class="bg-gradient-to-br from-green-900/60 to-emerald-900/60 p-4 md:p-5 rounded-2xl border border-green-400/30 flex items-center gap-4 shadow-lg">
+                        <div class="w-10 h-10 md:w-12 md:h-12 bg-green-500/20 rounded-full flex items-center justify-center text-green-300 shrink-0"><i data-lucide="check-circle-2" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                        <div><div class="text-xs md:text-sm text-green-200">ภารกิจสำเร็จรวม</div><div class="text-xl md:text-2xl font-bold text-white">${completedMissions} <span class="text-xs md:text-sm font-normal text-purple-300">ครั้ง</span></div></div>
                     </div>
                 </div>
 
                 <!-- ตารางข้อมูลผู้เล่น -->
-                <div class="bg-purple-900/40 rounded-2xl border border-purple-500/30 overflow-hidden">
-                    <div class="p-4 border-b border-purple-500/30 flex justify-between items-center bg-purple-950/50">
-                        <h3 class="font-bold text-lg text-yellow-300 flex items-center gap-2"><i data-lucide="table" class="w-5 h-5"></i> ข้อมูลการเล่นรายบุคคล</h3>
-                        <button id="btnDownloadCSV" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-md">
-                            <i data-lucide="download" class="w-4 h-4"></i> ดาวน์โหลด CSV
+                <div class="bg-purple-900/40 rounded-2xl border border-purple-500/30 overflow-hidden shadow-lg stagger-2">
+                    <div class="p-3 md:p-4 border-b border-purple-500/30 flex justify-between items-center bg-purple-950/50">
+                        <h3 class="font-bold text-base md:text-lg text-yellow-300 flex items-center gap-2 font-mali"><i data-lucide="table" class="w-4 h-4 md:w-5 md:h-5"></i> ข้อมูลการเล่นรายบุคคล</h3>
+                        <button id="btnDownloadCSV" class="bg-green-600 hover:bg-green-500 active:scale-95 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5 transition-all shadow-md touch-manipulation">
+                            <i data-lucide="download" class="w-3 h-3 md:w-4 md:h-4"></i> <span class="hidden sm:inline">ดาวน์โหลด CSV</span><span class="sm:hidden">CSV</span>
                         </button>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-purple-100">
-                            <thead class="bg-purple-900/60 text-yellow-400 font-mali text-base">
+                        <table class="w-full text-left text-xs md:text-sm text-purple-100 whitespace-nowrap">
+                            <thead class="bg-purple-900/60 text-yellow-400 font-mali text-xs md:text-base border-b border-purple-500/50">
                                 <tr>
-                                    <th class="p-4 font-bold">รหัสพนักงาน</th>
-                                    <th class="p-4 font-bold">แต้มบุญรวม</th>
-                                    <th class="p-4 font-bold">เปิดไพ่ (ครั้ง)</th>
-                                    <th class="p-4 font-bold">สำเร็จ (ครั้ง)</th>
-                                    <th class="p-4 font-bold">สถานะไพ่ล่าสุด</th>
+                                    <th class="p-3 md:p-4 font-bold tracking-wide">รหัสพนักงาน</th>
+                                    <th class="p-3 md:p-4 font-bold tracking-wide">แต้มรวม</th>
+                                    <th class="p-3 md:p-4 font-bold tracking-wide">ไพ่ทั้งหมด</th>
+                                    <th class="p-3 md:p-4 font-bold tracking-wide">ภารกิจสำเร็จ</th>
+                                    <th class="p-3 md:p-4 font-bold tracking-wide">สถานะล่าสุด</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-purple-500/20">
@@ -778,18 +819,18 @@
                     const comp = uDraws.filter(d => d.status === 'completed').length;
                     const latest = uDraws.length > 0 ? uDraws[0].status : 'ไม่เคยเปิด';
                     
-                    let statusBadge = '<span class="text-gray-400">ยังไม่เคยเล่น</span>';
-                    if(latest === 'completed') statusBadge = '<span class="bg-green-500/20 text-green-300 px-2 py-1 rounded-md text-xs border border-green-500/30">สำเร็จแล้ว</span>';
-                    else if(latest === 'pending') statusBadge = '<span class="bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-md text-xs border border-yellow-500/30">กำลังทำภารกิจ</span>';
-                    else if(latest === 'expired') statusBadge = '<span class="bg-red-500/20 text-red-300 px-2 py-1 rounded-md text-xs border border-red-500/30">หมดเวลา</span>';
+                    let statusBadge = '<span class="text-gray-500 italic text-xs">ยังไม่เคยเล่น</span>';
+                    if(latest === 'completed') statusBadge = '<span class="bg-green-500/20 text-green-300 px-2 py-0.5 rounded-md text-[10px] md:text-xs border border-green-500/30 font-medium">สำเร็จแล้ว</span>';
+                    else if(latest === 'pending') statusBadge = '<span class="bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-md text-[10px] md:text-xs border border-yellow-500/30 font-medium">กำลังทำภารกิจ</span>';
+                    else if(latest === 'expired') statusBadge = '<span class="bg-red-500/20 text-red-300 px-2 py-0.5 rounded-md text-[10px] md:text-xs border border-red-500/30 font-medium">หมดเวลา</span>';
 
                     html += `
-                        <tr class="hover:bg-purple-800/30 transition-colors">
-                            <td class="p-4 font-bold text-white">${p.emp_id || 'ไม่ระบุ'}</td>
-                            <td class="p-4 text-yellow-300 font-bold">${p.points}</td>
-                            <td class="p-4">${uDraws.length}</td>
-                            <td class="p-4 text-green-300">${comp}</td>
-                            <td class="p-4">${statusBadge}</td>
+                        <tr class="hover:bg-purple-800/40 transition-colors">
+                            <td class="p-3 md:p-4 font-bold text-white">${p.emp_id || 'ไม่ระบุ'}</td>
+                            <td class="p-3 md:p-4 text-yellow-300 font-bold">${p.points}</td>
+                            <td class="p-3 md:p-4 text-center sm:text-left">${uDraws.length}</td>
+                            <td class="p-3 md:p-4 text-green-300 text-center sm:text-left font-bold">${comp}</td>
+                            <td class="p-3 md:p-4">${statusBadge}</td>
                         </tr>
                     `;
                 });
@@ -815,7 +856,6 @@
                 ]);
             });
             
-            // สร้างไฟล์ CSV รองรับภาษาไทย (BOM)
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + rows.map(e => e.join(",")).join("\n");
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -830,32 +870,40 @@
 
         function renderAdminCards() {
             const listEl = document.getElementById('adminCardList');
-            if(state.cards.length === 0) { listEl.innerHTML = '<div class="col-span-full text-center py-10 text-purple-300 glass-panel rounded-2xl border-dashed">ยังไม่มีไพ่ในระบบ</div>'; return; }
+            if(state.cards.length === 0) { listEl.innerHTML = '<div class="col-span-full text-center py-10 text-purple-300 glass-panel rounded-2xl border-dashed animate-fade-in">ยังไม่มีไพ่ในระบบ</div>'; return; }
 
             let html = '';
-            state.cards.forEach(card => {
+            state.cards.forEach((card, index) => {
                 let imgDisplay = card.imageUrl && (card.imageUrl.startsWith('data:') || card.imageUrl.startsWith('http')) 
-                    ? `<img src="${card.imageUrl}" class="w-16 h-24 object-cover rounded-md border border-yellow-500/50 shadow-sm">` 
-                    : `<div class="text-5xl w-16 h-24 flex items-center justify-center bg-white/10 rounded-md border border-white/20">${card.imageUrl || '🃏'}</div>`;
+                    ? `<img src="${card.imageUrl}" class="w-16 h-24 md:w-20 md:h-28 object-cover rounded-md border border-yellow-500/50 shadow-sm shrink-0">` 
+                    : `<div class="text-4xl md:text-5xl w-16 h-24 md:w-20 md:h-28 flex items-center justify-center bg-white/10 rounded-md border border-white/20 shrink-0 drop-shadow-md">${card.imageUrl || '🃏'}</div>`;
 
+                let animationClass = index < 6 ? `stagger-${(index%4)+1}` : '';
+
+                // แก้ไขปุ่มลบ/แก้ไข ให้แสดงบนมือถือได้ชัดเจนขึ้น (opacity-80 แทน opacity-0)
                 html += `
-                    <div class="bg-purple-900/60 p-5 rounded-2xl border border-purple-400/30 relative flex flex-col h-full shadow-lg group hover:border-yellow-400/50 transition-colors backdrop-blur-sm">
-                        <button class="btn-delete-card absolute top-3 right-3 text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500 p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100" data-id="${card.id}">
-                            <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
-                        </button>
-                        <div class="flex items-start gap-4 mb-4">
+                    <div class="bg-purple-900/60 p-4 md:p-5 rounded-2xl border border-purple-400/30 relative flex flex-col h-full shadow-lg group hover:border-blue-400/50 transition-colors backdrop-blur-sm ${animationClass}">
+                        <div class="absolute top-2 right-2 flex gap-1 md:gap-2 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 bg-purple-950/80 p-1.5 rounded-xl border border-purple-500/30 backdrop-blur-md">
+                            <button class="btn-edit-card text-blue-300 hover:text-white bg-blue-500/20 hover:bg-blue-500 p-1.5 md:p-2 rounded-lg transition-colors touch-manipulation active:scale-90" data-id="${card.id}" title="แก้ไขไพ่">
+                                <i data-lucide="edit-2" class="w-4 h-4 pointer-events-none"></i>
+                            </button>
+                            <button class="btn-delete-card text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500 p-1.5 md:p-2 rounded-lg transition-colors touch-manipulation active:scale-90" data-id="${card.id}" title="ลบไพ่">
+                                <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-start gap-3 md:gap-4 mb-3">
                             ${imgDisplay}
-                            <div class="flex-1 mt-1">
-                                <span class="text-[10px] bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 px-2.5 py-0.5 rounded-full font-bold shadow-sm">SDG ${card.sdgTopic}</span>
-                                <h3 class="font-bold font-mali text-white text-lg mt-1.5 leading-tight line-clamp-2">${card.title}</h3>
+                            <div class="flex-1 mt-1 pr-16 sm:pr-0">
+                                <span class="text-[10px] bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 px-2 md:px-2.5 py-0.5 rounded-full font-bold shadow-sm border border-yellow-300 whitespace-nowrap">SDG ${card.sdgTopic}</span>
+                                <h3 class="font-bold font-mali text-white text-base md:text-lg mt-1.5 md:mt-2 leading-tight line-clamp-2 drop-shadow-sm">${card.title}</h3>
                             </div>
                         </div>
-                        <div class="text-xs text-purple-100 flex-1 space-y-2 bg-purple-950/50 p-3 rounded-xl border border-purple-500/20">
-                            <p class="line-clamp-2"><span class="text-yellow-300 mr-1">🔮:</span> ${card.fortuneText}</p>
-                            <p class="line-clamp-2"><span class="text-green-400 mr-1">🌿:</span> ${card.missionText}</p>
+                        <div class="text-xs text-purple-100 flex-1 space-y-2 bg-purple-950/50 p-3 md:p-3.5 rounded-xl border border-purple-500/20 shadow-inner">
+                            <p class="line-clamp-2"><span class="text-yellow-300 mr-1 font-bold">🔮:</span> <span class="opacity-90">${card.fortuneText}</span></p>
+                            <p class="line-clamp-2"><span class="text-green-400 mr-1 font-bold">🌿:</span> <span class="opacity-90">${card.missionText}</span></p>
                         </div>
-                        <div class="mt-4 flex justify-between items-center text-sm font-bold bg-purple-950/80 px-3 py-2 rounded-lg">
-                            <span class="text-yellow-400 flex items-center gap-1"><i data-lucide="award" class="w-4 h-4"></i> ${card.pointsReward} แต้ม</span>
+                        <div class="mt-3 md:mt-4 flex justify-between items-center text-xs md:text-sm font-bold bg-gradient-to-r from-purple-900 to-indigo-900 px-3 py-2 rounded-lg border border-purple-500/30">
+                            <span class="text-yellow-400 flex items-center gap-1.5 drop-shadow-sm"><i data-lucide="award" class="w-3 h-3 md:w-4 md:h-4"></i> รางวัล ${card.pointsReward} แต้ม</span>
                         </div>
                     </div>
                 `;
@@ -883,11 +931,11 @@
             
             const container = document.getElementById('homeContainer');
             container.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-10 w-full h-full relative z-10">
-                    <div class="crystal-ball mb-8">
-                        <i data-lucide="sparkles" class="w-16 h-16 text-white animate-spin"></i>
+                <div class="flex flex-col items-center justify-center py-10 w-full h-full relative z-10 animate-fade-in">
+                    <div class="crystal-ball mb-8 scale-90 md:scale-100">
+                        <i data-lucide="sparkles" class="w-12 h-12 md:w-16 md:h-16 text-white animate-spin"></i>
                     </div>
-                    <p class="text-2xl font-bold font-mali text-yellow-300 animate-pulse tracking-wide">แม่หมอกำลังสื่อสารกับจักรวาล...</p>
+                    <p class="text-xl md:text-2xl font-bold font-mali text-yellow-300 animate-pulse tracking-wide">แม่หมอกำลังสื่อสารกับจักรวาล...</p>
                 </div>
             `;
             lucide.createIcons();
@@ -911,19 +959,31 @@
 
         async function handleCompleteMission(drawId, pointsReward) {
             try {
+                // ตรวจสอบช่องกรอกข้อความ (บังคับกรอก)
+                const noteInput = document.getElementById('missionNoteInput');
+                if (noteInput && !noteInput.value.trim()) {
+                    noteInput.focus();
+                    noteInput.classList.add('ring-2', 'ring-red-400', 'border-red-400');
+                    setTimeout(() => noteInput.classList.remove('ring-2', 'ring-red-400', 'border-red-400'), 2000);
+                    return showModal('⚠️ แจ้งเตือน', 'อย่าลืมพิมพ์เล่าสู่กันฟังหน่อยนะจ๊ะ ว่าลงมือทำอะไรไปบ้าง แม่หมออยากรู้!');
+                }
+
                 const btn = document.getElementById('btnCompleteMission');
                 if (btn) { btn.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i> กำลังบันทึก...'; btn.disabled = true; lucide.createIcons(); }
 
+                const missionNoteText = noteInput ? noteInput.value.trim() : "";
+
                 if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
                     state.userDraws[0].status = 'completed';
+                    state.userDraws[0].missionNote = missionNoteText; // Mock save
                     state.points += parseInt(pointsReward);
-                    document.getElementById('pointsText').innerText = `แต้มบุญ: ${state.points}`;
+                    document.getElementById('pointsText').innerText = `${state.points}`;
                     state.missionProofImage = null; 
                     renderHome();
                     return;
                 }
 
-                const updateData = { status: 'completed' };
+                const updateData = { status: 'completed', "missionNote": missionNoteText };
                 if (state.missionProofImage) {
                     updateData.proofImage = state.missionProofImage;
                 }
@@ -937,16 +997,17 @@
             } catch (e) { console.error("Complete Mission Error", e); }
         }
 
-        function handleMissionImageUpload(e) {
+        function handleImageUpload(e) {
             const file = e.target.files[0]; if (!file) return;
             const textEl = document.getElementById('missionImageText');
-            textEl.innerText = 'กำลังบีบอัด...';
+            if(textEl) textEl.innerText = 'กำลังบีบอัด...';
             
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
                     let width = img.width, height = img.height;
+                    // บีบอัดรูปให้เล็กลงเพื่อประหยัดพื้นที่ Supabase (Max 500px)
                     if (width > height) { if (width > 500) { height *= 500 / width; width = 500; } } 
                     else { if (height > 500) { width *= 500 / height; height = 500; } }
                     const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
@@ -954,9 +1015,13 @@
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                     
                     state.missionProofImage = dataUrl;
-                    document.getElementById('missionImagePreview').src = dataUrl;
-                    document.getElementById('missionImagePreviewContainer').classList.remove('hidden');
-                    textEl.classList.add('hidden');
+                    const previewImg = document.getElementById('missionImagePreview');
+                    const previewContainer = document.getElementById('missionImagePreviewContainer');
+                    if (previewImg && previewContainer) {
+                        previewImg.src = dataUrl;
+                        previewContainer.classList.remove('hidden');
+                        textEl.classList.add('hidden');
+                    }
                 };
                 img.src = event.target.result;
             };
@@ -971,18 +1036,18 @@
             chatState.messages.forEach(msg => {
                 const isUser = msg.role === 'user';
                 html += `
-                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
-                        <div class="max-w-[85%] p-4 text-base leading-relaxed ${isUser ? 'chat-user font-medium' : 'chat-bot'}">${msg.text.replace(/\n/g, '<br>')}</div>
+                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'} animate-fade-in">
+                        <div class="max-w-[85%] md:max-w-[80%] p-3 md:p-4 text-sm md:text-base leading-relaxed ${isUser ? 'chat-user font-medium text-purple-900 bg-gradient-to-bl from-yellow-400 to-yellow-500' : 'chat-bot bg-white text-purple-900 border border-purple-200'}">${msg.text.replace(/\n/g, '<br>')}</div>
                     </div>
                 `;
             });
             if (chatState.isTyping) {
                 html += `
-                    <div class="flex justify-start">
-                        <div class="chat-bot p-4 flex space-x-2 items-center h-12 w-20 justify-center">
-                            <div class="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"></div>
-                            <div class="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                            <div class="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                    <div class="flex justify-start animate-fade-in">
+                        <div class="chat-bot p-3 md:p-4 flex space-x-2 items-center h-10 w-16 md:h-12 md:w-20 justify-center">
+                            <div class="w-2 h-2 md:w-2.5 md:h-2.5 bg-purple-400 rounded-full animate-bounce"></div>
+                            <div class="w-2 h-2 md:w-2.5 md:h-2.5 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="w-2 h-2 md:w-2.5 md:h-2.5 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
                         </div>
                     </div>
                 `;
@@ -1100,7 +1165,7 @@ ${drawHistoryText}
             finally { chatState.isTyping = false; renderChat(); }
         }
 
-        function handleImageUpload(e) {
+        function handleImageUploadAdmin(e) {
             const file = e.target.files[0]; if (!file) return;
             const urlInput = document.getElementById('f_imageUrl'); urlInput.value = 'กำลังบีบอัดรูปภาพ...';
             const reader = new FileReader();
@@ -1128,23 +1193,37 @@ ${drawHistoryText}
                   fortuneText = document.getElementById('f_fortuneText').value, missionText = document.getElementById('f_missionText').value,
                   luckyTip = document.getElementById('f_luckyTip').value, pointsReward = document.getElementById('f_pointsReward').value,
                   imageUrl = document.getElementById('f_imageUrl').value;
+            
             if (!title || !fortuneText || !missionText) return showModal('แจ้งเตือน', 'กรุณากรอกข้อมูลสำคัญให้ครบถ้วนนะจ๊ะ');
             
             try {
                 const btn = document.getElementById('saveCardBtn'); btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> กำลังบันทึก...'; btn.disabled = true; lucide.createIcons();
                 
-                if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
-                    state.cards.push({ id: Date.now(), sdgTopic: Number(sdgTopic), title, fortuneText, missionText, luckyTip, pointsReward: Number(pointsReward), imageUrl, isActive: true });
+                const cardData = { "sdgTopic": Number(sdgTopic), title, "fortuneText": fortuneText, "missionText": missionText, "luckyTip": luckyTip, "pointsReward": Number(pointsReward), "imageUrl": imageUrl, "isActive": true };
+
+                if (state.editingCardId) {
+                    // Update โหมดแก้ไข
+                    if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                        const idx = state.cards.findIndex(c => c.id == state.editingCardId);
+                        if(idx > -1) state.cards[idx] = { ...state.cards[idx], ...cardData };
+                    } else {
+                        await supabaseClient.from('cards').update(cardData).eq('id', state.editingCardId);
+                        await fetchData();
+                    }
+                    showModal('อัปเดตสำเร็จ!', 'แก้ไขข้อมูลไพ่เรียบร้อยแล้วจ้า');
                 } else {
-                    await supabaseClient.from('cards').insert([{ "sdgTopic": Number(sdgTopic), title, "fortuneText": fortuneText, "missionText": missionText, "luckyTip": luckyTip, "pointsReward": Number(pointsReward), "imageUrl": imageUrl, "isActive": true, "createdAt": Date.now() }]);
-                    await fetchData();
+                    // Insert โหมดสร้างใหม่
+                    if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                        state.cards.push({ id: Date.now(), ...cardData });
+                    } else {
+                        cardData.createdAt = Date.now();
+                        await supabaseClient.from('cards').insert([cardData]);
+                        await fetchData();
+                    }
+                    showModal('สร้างไพ่สำเร็จ!', 'แม่หมอเก็บไพ่ใบใหม่เข้าสำรับเรียบร้อยแล้วจ้า');
                 }
 
-                ['f_title','f_fortuneText','f_missionText','f_luckyTip','f_imageUrl'].forEach(id => document.getElementById(id).value = '');
-                document.getElementById('f_imagePreview').classList.add('hidden'); document.getElementById('f_imagePlaceholder').classList.remove('hidden');
-                document.getElementById('addCardForm').classList.add('hidden');
-                
-                showModal('สำเร็จ!', 'แม่หมอเก็บไพ่ใบใหม่เข้าสำรับเรียบร้อยแล้วจ้า');
+                resetCardForm();
                 if(SUPABASE_URL.includes('YOUR_SUPABASE')) renderAdmin();
 
             } catch (e) { 
@@ -1155,8 +1234,21 @@ ${drawHistoryText}
             }
         }
 
+        function resetCardForm() {
+            state.editingCardId = null;
+            document.getElementById('formTitleText').innerHTML = `✨ สร้างไพ่คำทำนายใหม่`;
+            document.getElementById('saveCardBtn').innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> บันทึกไพ่ลงในสำรับ`;
+            document.getElementById('btnCancelEdit').classList.add('hidden');
+            ['f_title','f_fortuneText','f_missionText','f_luckyTip','f_imageUrl'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('f_sdgTopic').value = '1';
+            document.getElementById('f_pointsReward').value = '20';
+            document.getElementById('f_imagePreview').classList.add('hidden'); document.getElementById('f_imagePlaceholder').classList.remove('hidden');
+            document.getElementById('addCardForm').classList.add('hidden');
+            lucide.createIcons();
+        }
+
         function showModal(title, message, isConfirm = false, onConfirm = null) {
-            document.getElementById('modalTitle').innerHTML = `<i data-lucide="${isConfirm ? 'alert-triangle' : 'sparkles'}" class="w-6 h-6 text-yellow-400"></i> ${title}`;
+            document.getElementById('modalTitle').innerHTML = `<i data-lucide="${isConfirm ? 'alert-triangle' : 'sparkles'}" class="w-6 h-6 md:w-7 md:h-7 text-yellow-400"></i> ${title}`;
             document.getElementById('modalMessage').innerText = message;
             document.getElementById('customModal').classList.remove('hidden');
             const cancelBtn = document.getElementById('modalCancel');
@@ -1172,7 +1264,16 @@ ${drawHistoryText}
                 if (e.target.closest('#btnDrawCard')) handleDrawCard();
                 const completeBtn = e.target.closest('#btnCompleteMission'); if (completeBtn) handleCompleteMission(completeBtn.dataset.id, completeBtn.dataset.pts);
                 if (e.target.closest('#chatSendBtn')) handleSendChat();
-                if (e.target.closest('#toggleAddCardBtn')) document.getElementById('addCardForm').classList.toggle('hidden');
+                
+                // Form Toggle & Cancel Edit
+                if (e.target.closest('#toggleAddCardBtn')) {
+                    resetCardForm();
+                    document.getElementById('addCardForm').classList.toggle('hidden');
+                    if(!document.getElementById('addCardForm').classList.contains('hidden')) {
+                        window.scrollTo({top: document.getElementById('addCardForm').offsetTop - 20, behavior: 'smooth'});
+                    }
+                }
+                if (e.target.closest('#btnCancelEdit')) resetCardForm();
                 if (e.target.id === 'saveCardBtn') handleSaveCard();
                 
                 // สลับ Tab ย่อยในหน้า Admin
@@ -1182,6 +1283,7 @@ ${drawHistoryText}
                 // ปุ่มดาวน์โหลด CSV
                 if (e.target.closest('#btnDownloadCSV')) handleDownloadCSV();
 
+                // ลบไพ่
                 const delBtn = e.target.closest('.btn-delete-card');
                 if (delBtn) showModal('ยืนยันการลบไพ่', 'คุณแน่ใจหรือไม่ว่าต้องการเผาไพ่ใบนี้ทิ้ง? ข้อมูลจะไม่สามารถกู้คืนได้นะจ๊ะ', true, async () => { 
                     if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
@@ -1192,6 +1294,39 @@ ${drawHistoryText}
                         await fetchData();
                     }
                 });
+
+                // แก้ไขไพ่
+                const editBtn = e.target.closest('.btn-edit-card');
+                if (editBtn) {
+                    const card = state.cards.find(c => c.id == editBtn.dataset.id);
+                    if(card) {
+                        state.editingCardId = card.id;
+                        document.getElementById('f_sdgTopic').value = card.sdgTopic;
+                        document.getElementById('f_title').value = card.title;
+                        document.getElementById('f_fortuneText').value = card.fortuneText;
+                        document.getElementById('f_missionText').value = card.missionText;
+                        document.getElementById('f_luckyTip').value = card.luckyTip || '';
+                        document.getElementById('f_pointsReward').value = card.pointsReward;
+                        document.getElementById('f_imageUrl').value = card.imageUrl || '';
+                        
+                        if(card.imageUrl && (card.imageUrl.startsWith('data:image') || card.imageUrl.startsWith('http'))) {
+                            document.getElementById('f_imagePreview').src = card.imageUrl;
+                            document.getElementById('f_imagePreview').classList.remove('hidden');
+                            document.getElementById('f_imagePlaceholder').classList.add('hidden');
+                        } else {
+                            document.getElementById('f_imagePreview').classList.add('hidden');
+                            document.getElementById('f_imagePlaceholder').classList.remove('hidden');
+                        }
+                        
+                        document.getElementById('formTitleText').innerHTML = `<i data-lucide="edit-3" class="w-6 h-6 mr-1"></i> แก้ไขไพ่พยากรณ์`;
+                        document.getElementById('saveCardBtn').innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> บันทึกการแก้ไข`;
+                        document.getElementById('btnCancelEdit').classList.remove('hidden');
+                        document.getElementById('addCardForm').classList.remove('hidden');
+                        lucide.createIcons();
+                        window.scrollTo({top: document.getElementById('addCardForm').offsetTop - 80, behavior: 'smooth'});
+                    }
+                }
+
                 if (e.target.id === 'modalConfirm') { hideModal(); if (confirmCallback) confirmCallback(); }
                 if (e.target.id === 'modalCancel') hideModal();
                 
@@ -1209,18 +1344,19 @@ ${drawHistoryText}
                     textEl.classList.remove('hidden');
                 }
             });
-            document.getElementById('f_imageUpload').addEventListener('change', handleImageUpload);
-            
+
             document.addEventListener('change', (e) => {
                 if (e.target.id === 'missionImageUpload') handleMissionImageUpload(e);
+                if (e.target.id === 'f_imageUpload') handleImageUploadAdmin(e);
             });
 
             document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendChat(); });
             document.getElementById('authEmpId').addEventListener('input', function (e) { this.value = this.value.replace(/[^0-9]/g, ''); });
 
+            // แก้ไขปัญหากด 5 ครั้งบนมือถือ โดยเปลี่ยนจาก click เป็น pointerdown (ลดดีเลย์ 300ms บน Mobile)
             let secretClickCount = 0;
             let secretClickTimer = null;
-            document.getElementById('secretAdminTrigger').addEventListener('click', () => {
+            document.getElementById('secretAdminTrigger').addEventListener('pointerdown', (e) => {
                 secretClickCount++;
                 clearTimeout(secretClickTimer);
                 if(secretClickCount >= 5) {
@@ -1235,12 +1371,12 @@ ${drawHistoryText}
                     if(pass === 'SD2026') { 
                         state.role = 'admin';
                         renderAll();
-                        alert('ปลดล็อคโหมดจัดการไพ่ (Admin) แล้วจ้า!');
+                        alert('ปลดล็อคโหมด Admin แล้วจ้า!');
                     } else if (pass !== null) {
                         alert('คาถาไม่ถูกต้องนะจ๊ะ');
                     }
                 } else {
-                    secretClickTimer = setTimeout(() => secretClickCount = 0, 1000); 
+                    secretClickTimer = setTimeout(() => secretClickCount = 0, 1500); // เพิ่มเวลาให้แตะทันบนมือถือ
                 }
             });
         }
