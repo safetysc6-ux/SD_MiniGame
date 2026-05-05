@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คำทำนายรายวันกับแม่หมอ SD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        .font-mali { font-family: 'Mali', cursive; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animations */
+        .spin-slow { animation: spin 8s linear infinite; }
+        .floating { animation: float 4s ease-in-out infinite; }
+        .floating-delayed { animation: float 4s ease-in-out 2s infinite; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(253, 224, 71, 0.5), inset 0 0 10px rgba(255,255,255,0.5); }
+            50% { box-shadow: 0 0 40px rgba(253, 224, 71, 0.9), inset 0 0 20px rgba(255,255,255,0.8); transform: scale(1.02); }
+        }
+        .btn-magic { animation: pulse-glow 2.5s infinite; transition: all 0.3s; }
+        .btn-magic:hover { animation: none; transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 30px rgba(253, 224, 71, 0.8); }
+
+        /* Custom Elements */
+        .glass-panel { background: rgba(92, 50, 123, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        
+        .crystal-ball {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50px 50px, #e0c3fc 0%, #8ec5fc 40%, #5c327b 100%);
+            box-shadow: inset 0 0 30px rgba(255,255,255,0.8), inset 10px 0 40px rgba(255, 200, 255, 0.6), inset -10px 0 40px rgba(100, 200, 255, 0.6), 0 0 50px rgba(142, 197, 252, 0.8);
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .crystal-ball::before {
+            content: ''; position: absolute; top: 15px; left: 25px; width: 45px; height: 20px;
+            border-radius: 50%; background: rgba(255,255,255,0.6); transform: rotate(-45deg); filter: blur(2px);
+        }
+
+        .tarot-card {
+            background: #FFFAF0; 
+            border: 8px solid #D4AF37; 
+            outline: 2px solid #8B4513; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 0 20px rgba(212, 175, 55, 0.3);
+            border-radius: 16px;
+        }
+
+        /* Chat Bubbles */
+        .chat-bot { background: #FFFFFF; color: #4A1E6D; border-radius: 20px 20px 20px 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .chat-user { background: #FFE082; color: #4A1E6D; border-radius: 20px 20px 4px 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-[#6A3093] via-[#4A1E6D] to-[#2B0E42] text-white min-h-screen selection:bg-yellow-500 selection:text-purple-900 relative overflow-x-hidden">
+
+    <!-- Decorative Background Stars -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="absolute top-10 left-10 text-yellow-300 opacity-60 floating text-2xl">✨</div>
+        <div class="absolute top-40 right-[10%] text-yellow-200 opacity-40 floating-delayed text-3xl">🌟</div>
+        <div class="absolute top-[60%] left-[5%] text-yellow-400 opacity-50 floating text-xl">✨</div>
+        <div class="absolute bottom-20 right-[20%] text-yellow-300 opacity-60 floating-delayed text-2xl">⭐</div>
+        <div class="absolute top-[30%] left-[80%] text-white opacity-30 floating text-lg">✨</div>
+    </div>
+
+    <!-- Auth Overlay (หน้าต่าง Login) -->
+    <div id="authOverlay" class="fixed inset-0 bg-[#2B0E42]/95 z-[100] flex items-center justify-center backdrop-blur-md transition-opacity duration-300 hidden">
+        <div class="glass-panel p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(253,224,71,0.2)] max-w-sm w-full border border-purple-400/50 relative overflow-hidden mx-4">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full pointer-events-none"></div>
+            
+            <div class="text-center mb-8 relative z-10">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-4xl shadow-[0_0_15px_rgba(253,224,71,0.6)] border-2 border-yellow-400 mx-auto mb-4">🔮</div>
+                <h2 class="text-2xl font-bold font-mali text-yellow-400">แม่หมอ SD พยากรณ์</h2>
+                <p class="text-purple-200 text-sm mt-1">กรุณาใส่รหัสพนักงานเพื่อเริ่มดูดวง</p>
+            </div>
+
+            <div class="space-y-4 relative z-10">
+                <div>
+                    <label class="block text-sm font-medium text-purple-200 mb-1.5">รหัสพนักงาน (ตัวเลขเท่านั้น)</label>
+                    <div class="relative">
+                        <i data-lucide="user" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-purple-400"></i>
+                        <input type="text" id="authEmpId" inputmode="numeric" placeholder="เช่น 1001" class="w-full bg-purple-950/50 rounded-xl py-3 pl-10 pr-4 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                    </div>
+                </div>
+                
+                <div id="authError" class="text-red-400 text-sm text-center hidden bg-red-900/20 p-2 rounded-lg border border-red-500/30"></div>
+
+                <div class="pt-4 space-y-3">
+                    <button id="btnEnter" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:scale-105 text-purple-900 font-bold text-lg py-3 rounded-xl transition-transform shadow-md flex justify-center items-center">
+                        เข้าสู่ระบบ / เริ่มต้นใช้งาน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="p-4 glass-panel sticky top-0 z-50 border-b border-purple-400/30">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <!-- เพิ่ม id="secretAdminTrigger" และทำให้กดได้ที่โลโก้ -->
+            <div class="flex items-center space-x-3 cursor-pointer select-none transition-transform active:scale-95" id="secretAdminTrigger">
+                <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(253,224,71,0.6)]">
+                    <i data-lucide="sparkles" class="text-purple-900 w-6 h-6"></i>
+                </div>
+                <h1 class="text-2xl font-bold font-mali text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 drop-shadow-sm">แม่หมอ SD Oracle</h1>
+            </div>
+            <div class="flex space-x-4 items-center text-sm flex-wrap justify-end">
+                <div class="bg-purple-900/80 px-4 py-1.5 rounded-full text-yellow-300 font-bold border border-yellow-500/30 flex items-center gap-2 shadow-inner" id="navPoints">
+                    <span class="text-lg">✨</span> <span id="pointsText">แต้มบุญ: 0</span>
+                </div>
+                <!-- ลบปุ่ม สลับโหมด Admin เดิมออกไป -->
+                <button id="logoutBtn" class="bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors hidden border border-red-500/30">
+                    ออกจากระบบ
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto p-4 py-8 relative z-10">
+        
+        <!-- Loading State -->
+        <div id="loadingOverlay" class="absolute inset-0 bg-[#2B0E42]/90 z-40 flex items-center justify-center rounded-3xl backdrop-blur-md">
+            <div class="text-center bg-purple-900/50 p-8 rounded-3xl border border-purple-500/30 shadow-2xl">
+                <i data-lucide="loader-2" class="w-12 h-12 text-yellow-400 animate-spin mx-auto mb-4"></i>
+                <p class="text-xl font-bold font-mali text-yellow-200 tracking-wide">แม่หมอกำลังจัดเตรียมไพ่...</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex justify-center space-x-3 md:space-x-6 mb-10 overflow-x-auto hide-scrollbar pb-2">
+            <button data-tab="home" class="tab-btn flex items-center space-x-2 px-6 md:px-8 py-3.5 rounded-full font-bold font-mali transition-all duration-300 bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 shadow-[0_5px_20px_rgba(253,224,71,0.5)] transform scale-105 whitespace-nowrap">
+                <i data-lucide="sparkles" class="w-5 h-5"></i><span>เปิดไพ่วันนี้</span>
+            </button>
+            <button data-tab="chatbot" class="tab-btn flex items-center space-x-2 px-6 md:px-8 py-3.5 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap">
+                <i data-lucide="message-circle" class="w-5 h-5"></i><span>คุยกับแม่หมอ</span>
+            </button>
+            <button data-tab="admin" id="adminTabBtn" class="tab-btn hidden items-center space-x-2 px-6 md:px-8 py-3.5 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap">
+                <i data-lucide="shield" class="w-5 h-5"></i><span>จัดการไพ่</span>
+            </button>
+        </div>
+
+        <!-- Tab Content: Home (Draw Card) -->
+        <div id="homeTab" class="tab-content">
+            <div id="homeContainer" class="glass-panel rounded-[2rem] p-6 md:p-12 shadow-[0_10px_40px_rgba(0,0,0,0.5)] min-h-[450px] flex items-center justify-center relative overflow-hidden">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+
+        <!-- Tab Content: Chatbot -->
+        <div id="chatbotTab" class="tab-content hidden">
+            <div class="glass-panel rounded-[2rem] shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex flex-col h-[600px] overflow-hidden relative border border-purple-400/30">
+                <div class="p-5 bg-purple-900/60 border-b border-purple-500/30 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-[0_0_15px_rgba(253,224,71,0.6)] bg-gradient-to-br from-purple-500 to-indigo-600 border-2 border-yellow-400 relative">
+                        🧙‍♀️
+                        <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 border-2 border-purple-900 rounded-full"></span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold font-mali text-yellow-300">แม่หมอ SD</h3>
+                        <p class="text-xs font-medium text-green-300">พร้อมให้คำปรึกษาและดูดวงจ้า</p>
+                    </div>
+                </div>
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-6 bg-black/10">
+                    <!-- Chat messages injected here -->
+                </div>
+                <div class="p-4 bg-purple-900/60 border-t border-purple-500/30">
+                    <div class="flex gap-3 bg-purple-950/50 p-2 rounded-full border border-purple-400/30 focus-within:border-yellow-400 focus-within:shadow-[0_0_10px_rgba(253,224,71,0.3)] transition-all">
+                        <input type="text" id="chatInput" placeholder="พิมพ์ถามเรื่องดวง หรือเป้าหมาย SDGs ได้เลย..." class="flex-1 bg-transparent px-4 py-2 text-white placeholder-purple-300/70 focus:outline-none font-medium">
+                        <button id="chatSendBtn" class="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-purple-900 w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-md">
+                            <i data-lucide="send" class="w-5 h-5 ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Admin -->
+        <div id="adminTab" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center glass-panel p-6 rounded-3xl border border-purple-400/30 gap-4 shadow-lg">
+                <div>
+                    <h2 class="text-2xl font-bold font-mali text-yellow-400">จัดการไพ่พยากรณ์ (Admin)</h2>
+                    <p class="text-purple-200 mt-1">อัปโหลดรูปภาพ สร้างคำทำนายและภารกิจใหม่ๆ</p>
+                </div>
+                <button id="toggleAddCardBtn" class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform w-full md:w-auto justify-center shadow-lg">
+                    <i data-lucide="plus" class="w-5 h-5"></i> สร้างไพ่ใบใหม่
+                </button>
+            </div>
+
+            <!-- Add Card Form -->
+            <div id="addCardForm" class="hidden glass-panel p-8 rounded-3xl border border-yellow-500/50 space-y-5 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full"></div>
+                <h3 class="font-mali text-xl font-bold text-yellow-300 mb-4 border-b border-purple-500/30 pb-2">✨ แบบฟอร์มสร้างไพ่</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
+                    <div>
+                        <label class="block text-sm font-medium text-purple-200 mb-1.5">หัวข้อ SDG (1-17)</label>
+                        <input type="number" id="f_sdgTopic" min="1" max="17" value="1" class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-purple-200 mb-1.5">ชื่อการ์ดพยากรณ์</label>
+                        <input type="text" id="f_title" placeholder="เช่น SDG 1: ขจัดความยากจน" class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-purple-200 mb-1.5">รูปภาพหน้าไพ่</label>
+                        <div class="flex gap-4 items-center bg-purple-950/40 p-4 rounded-2xl border border-purple-400/30">
+                            <div class="flex-1 space-y-3">
+                                <label class="cursor-pointer bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-5 py-2.5 rounded-xl hover:from-purple-400 hover:to-indigo-400 flex items-center justify-center gap-2 w-full transition-all shadow-md">
+                                    <i data-lucide="image-plus" class="w-5 h-5"></i> อัปโหลดรูปจากเครื่อง
+                                    <input type="file" id="f_imageUpload" class="hidden" accept="image/*">
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <hr class="flex-1 border-purple-500/30">
+                                    <span class="text-xs text-purple-300">หรือใช้อีโมจิ/URL</span>
+                                    <hr class="flex-1 border-purple-500/30">
+                                </div>
+                                <input type="text" id="f_imageUrl" placeholder="ใส่ Emoji (เช่น 🌍) หรือ Link รูปภาพ" class="w-full bg-purple-900/50 rounded-xl p-2.5 text-white border border-purple-500/50 focus:border-yellow-400 outline-none text-sm">
+                            </div>
+                            <div class="w-28 h-40 bg-purple-900/80 rounded-xl border-2 border-dashed border-purple-400 flex flex-col items-center justify-center overflow-hidden shrink-0 shadow-inner relative">
+                                <img id="f_imagePreview" src="" class="hidden w-full h-full object-cover">
+                                <div id="f_imagePlaceholder" class="text-center text-purple-300">
+                                    <i data-lucide="image" class="w-8 h-8 mx-auto mb-1 opacity-50"></i>
+                                    <span class="text-xs">ตัวอย่างภาพ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-purple-200 mb-1.5">คำทำนายดวงชะตา</label>
+                        <textarea id="f_fortuneText" rows="2" placeholder="ดวงของคุณวันนี้..." class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-purple-200 mb-1.5">ภารกิจรักษ์โลก</label>
+                        <textarea id="f_missionText" rows="2" placeholder="พกแก้วน้ำส่วนตัว..." class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-purple-200 mb-1.5">เคล็ดลับเสริมดวง (Lucky Tip)</label>
+                        <input type="text" id="f_luckyTip" placeholder="เช่น ใส่เสื้อสีเขียว" class="w-full bg-purple-950/50 rounded-xl p-3 text-white border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-purple-200 mb-1.5">แต้มบุญที่จะได้รับ</label>
+                        <input type="number" id="f_pointsReward" value="20" class="w-full bg-purple-950/50 rounded-xl p-3 text-yellow-300 font-bold border border-purple-400/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-all">
+                    </div>
+                </div>
+                <button id="saveCardBtn" class="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 text-purple-900 font-bold text-lg py-4 rounded-xl transition-all shadow-[0_5px_15px_rgba(16,185,129,0.4)] mt-6 flex justify-center items-center gap-2">
+                    <i data-lucide="save" class="w-5 h-5"></i> บันทึกไพ่ลงในสำรับ
+                </button>
+            </div>
+
+            <!-- Card List -->
+            <div id="adminCardList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Cards injected here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="fixed inset-0 bg-black/70 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="glass-panel border-2 border-yellow-400/50 rounded-3xl p-8 max-w-sm w-full shadow-[0_0_50px_rgba(253,224,71,0.2)] transform scale-95 transition-transform duration-300" id="modalContent">
+            <h3 id="modalTitle" class="text-2xl font-bold font-mali text-yellow-400 mb-3 flex items-center gap-2">
+                <i data-lucide="bell-ring" class="w-6 h-6"></i> ข้อความ
+            </h3>
+            <p id="modalMessage" class="text-purple-100 mb-8 text-lg leading-relaxed"></p>
+            <div class="flex justify-end gap-3">
+                <button id="modalCancel" class="px-5 py-2.5 rounded-xl bg-purple-900/80 text-white hover:bg-purple-800 transition-colors hidden font-medium">ยกเลิก</button>
+                <button id="modalConfirm" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 font-bold hover:scale-105 transition-transform shadow-md">ตกลง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- เรียกใช้ Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ⚠️⚠️⚠️ 1. ใส่ KEY ของ SUPABASE ตรงนี้ ⚠️⚠️⚠️
+        const SUPABASE_URL = 'https://cixiviikcoixsbcvafgl.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGl2aWlrY29peHNiY3ZhZmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5Mjg2NDUsImV4cCI6MjA5MzUwNDY0NX0.WQz-s2ZhcsDO6IjfCZIq7rZNPQddE7IuGrOH9EXdh-s';
+        
+        // ⚠️⚠️⚠️ 2. ใส่ KEY ของ GROQ AI ตรงนี้ (คำเตือน: หากนำเว็บนี้ไปแปะบน Vercel แบบสาธารณะ คนอื่นอาจเห็น Key นี้ได้) ⚠️⚠️⚠️
+        const GROQ_API_KEY = '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'; 
+
+        // แก้ไข Error: Identifier 'supabase' has already been declared โดยเปลี่ยนชื่อตัวแปรเป็น supabaseClient
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const state = {
+            user: null, role: 'user', cards: [], userDraws: [], points: 0, activeTab: 'home', timerInterval: null, missionProofImage: null
+        };
+
+        const FAKE_DOMAIN = '@sd-oracle.local';
+
+        const DEFAULT_CARDS = [
+            { "sdgTopic": 13, title: "SDG 13: Climate Action", "fortuneText": "ดวงคุณวันนี้มีพลังงานความร้อนแฝงอยู่ ระวังอารมณ์หงุดหงิดเหมือนสภาพอากาศนะ!", "missionText": "พกแก้วน้ำส่วนตัวหรือถุงผ้าเพื่อลดขยะพลาสติก 1 ชิ้น", "luckyTip": "สวมเสื้อผ้าสีเขียวหรือฟ้าเพื่อความร่มเย็น", "pointsReward": 20, "imageUrl": "🌍", "isActive": true },
+            { "sdgTopic": 3, title: "SDG 3: Good Health", "fortuneText": "ไพ่เตือนว่าช่วงนี้ลุยงานหนักเกินไป ร่างกายกำลังประท้วงเงียบๆ ต้องการการฟื้นฟูด่วนจ้า", "missionText": "ดื่มน้ำให้ครบ 8 แก้ว และลุกเดินยืดเส้นยืดสาย 15 นาที", "luckyTip": "กินผลไม้สีส้มหรือสีเหลืองเพิ่มความสดใส", "pointsReward": 15, "imageUrl": "❤️", "isActive": true },
+            { "sdgTopic": 12, title: "SDG 12: Responsible Consumption", "fortuneText": "มีเกณฑ์ทรัพย์ไหลออกไปกับของจุกจิกน่ารัก แม่หมอขอเตือนให้มีสติก่อนโอนเงินนะลูก", "missionText": "จัดระเบียบสิ่งของ 3 ชิ้นเพื่อเตรียมบริจาคหรือรีไซเคิล", "luckyTip": "จัดโต๊ะทำงานให้โล่ง เปิดรับโชคลาภ", "pointsReward": 25, "imageUrl": "♻️", "isActive": true }
+        ];
+
+        async function init() {
+            lucide.createIcons();
+            setupEventListeners();
+            
+            try {
+                if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                    console.log("Running in Preview Mode (No Supabase connected)");
+                    return;
+                }
+
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    await handleAuthSuccess(session.user);
+                } else {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    document.getElementById('authOverlay').classList.remove('hidden');
+                }
+
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_OUT') {
+                        state.user = null;
+                        document.getElementById('authOverlay').classList.remove('hidden');
+                        document.getElementById('logoutBtn').classList.add('hidden');
+                        document.getElementById('pointsText').innerText = 'แต้มบุญ: 0';
+                        document.getElementById('homeContainer').innerHTML = ''; 
+                        switchTab('home');
+                    } else if (session) {
+                        handleAuthSuccess(session.user);
+                    }
+                });
+            } catch (error) {
+                console.error("Initialization Error:", error);
+            }
+        }
+
+        async function handleAuthSuccess(user) {
+            state.user = user;
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            
+            const empId = user.email.split('@')[0].toUpperCase();
+            document.getElementById('toggleRoleBtn').innerText = `สลับโหมด Admin (${empId})`;
+            
+            await fetchData();
+        }
+
+        async function handleEnter() {
+            if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                showModal('โหมดจำลอง', 'กรุณาใส่ Supabase API Key ในโค้ดไฟล์ index.html ก่อนใช้งานจริงนะครับ');
+                document.getElementById('authOverlay').classList.add('hidden');
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return;
+            }
+
+            const empId = document.getElementById('authEmpId').value.trim();
+            const errEl = document.getElementById('authError');
+            
+            if (!empId) {
+                errEl.innerText = 'กรุณากรอกรหัสพนักงานด้วยจ้า';
+                errEl.classList.remove('hidden'); return;
+            }
+            
+            const btn = document.getElementById('btnEnter');
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>'; lucide.createIcons();
+            
+            const fakeEmail = `${empId.toLowerCase()}${FAKE_DOMAIN}`;
+            const staticPassword = 'SD-Oracle-Secret-Pass-2026!'; 
+            
+            let { data, error } = await supabaseClient.auth.signInWithPassword({ email: fakeEmail, password: staticPassword });
+
+            if (error) {
+                const { error: signUpError } = await supabaseClient.auth.signUp({ email: fakeEmail, password: staticPassword });
+                if (signUpError) {
+                    errEl.innerText = 'เกิดข้อผิดพลาด (แอดมินอย่าลืมปิด Confirm Email ใน Supabase นะ)';
+                    errEl.classList.remove('hidden');
+                    btn.innerText = 'เข้าสู่ระบบ / เริ่มต้นใช้งาน';
+                    return;
+                }
+                showModal('ยินดีต้อนรับ!', 'นี่คือการเข้าใช้งานครั้งแรกของรหัสนี้ แม่หมอเตรียมไพ่ไว้ให้แล้วจ้า');
+            } else {
+                errEl.classList.add('hidden');
+            }
+            btn.innerText = 'เข้าสู่ระบบ / เริ่มต้นใช้งาน';
+        }
+
+        async function handleLogout() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            await supabaseClient.auth.signOut();
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        async function fetchData() {
+            if (!state.user) return;
+            try {
+                const { data: fetchedCards } = await supabaseClient.from('cards').select('*').order('createdAt', { ascending: false });
+                if (!fetchedCards || fetchedCards.length === 0) {
+                    for (const card of DEFAULT_CARDS) await supabaseClient.from('cards').insert([{ ...card, "createdAt": Date.now() }]);
+                    const { data: reFetchedCards } = await supabaseClient.from('cards').select('*').order('createdAt', { ascending: false });
+                    state.cards = reFetchedCards || [];
+                } else { state.cards = fetchedCards; }
+
+                const { data: fetchedDraws } = await supabaseClient.from('daily_draws').select('*').eq('user_id', state.user.id);
+                if (fetchedDraws) { state.userDraws = fetchedDraws; await checkAndExpireDraws(); }
+
+                const { data: profile, error: profileError } = await supabaseClient.from('profiles').select('points').eq('id', state.user.id).single();
+                if (profileError && profileError.code === 'PGRST116') {
+                    await supabaseClient.from('profiles').insert([{ id: state.user.id, points: 0 }]);
+                    state.points = 0;
+                } else if (profile) { state.points = profile.points || 0; }
+                
+                document.getElementById('pointsText').innerText = `แต้มบุญ: ${state.points}`;
+                renderAll();
+            } catch (error) { console.error("Fetch Data Error:", error); }
+        }
+
+        async function checkAndExpireDraws() {
+            if (!state.user) return;
+            const now = Date.now();
+            let changed = false;
+            for (const draw of state.userDraws) {
+                if (draw.status === 'pending' && now > draw.expiresAt) {
+                    await supabaseClient.from('daily_draws').update({ status: 'expired' }).eq('id', draw.id);
+                    draw.status = 'expired'; changed = true;
+                }
+            }
+            if(changed) renderHome();
+        }
+
+        function getActiveDraw() {
+            return state.userDraws.find(d => {
+                const isPending = d.status === 'pending';
+                const isCompletedToday = d.status === 'completed' && (Date.now() - d.drawnAt) < 24 * 60 * 60 * 1000;
+                return isPending || isCompletedToday;
+            });
+        }
+
+        function renderAll() {
+            renderTabs();
+            if (state.activeTab === 'home') renderHome();
+            if (state.activeTab === 'admin' && state.role === 'admin') renderAdmin();
+        }
+
+        function renderTabs() {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${state.activeTab}Tab`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const isActive = btn.dataset.tab === state.activeTab;
+                btn.className = isActive 
+                    ? "tab-btn flex items-center space-x-2 px-6 md:px-8 py-3.5 rounded-full font-bold font-mali transition-all duration-300 bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 shadow-[0_5px_20px_rgba(253,224,71,0.5)] transform scale-105 whitespace-nowrap"
+                    : "tab-btn flex items-center space-x-2 px-6 md:px-8 py-3.5 rounded-full font-bold font-mali transition-all duration-300 glass-card text-purple-100 hover:bg-white/20 whitespace-nowrap";
+            });
+
+            const adminTabBtn = document.getElementById('adminTabBtn');
+            if (state.role === 'admin') { adminTabBtn.classList.remove('hidden'); adminTabBtn.classList.add('flex'); } 
+            else { adminTabBtn.classList.add('hidden'); adminTabBtn.classList.remove('flex'); if (state.activeTab === 'admin') switchTab('home'); }
+            lucide.createIcons();
+        }
+
+        function switchTab(tabId) { state.activeTab = tabId; renderAll(); }
+
+        function renderHome() {
+            const container = document.getElementById('homeContainer');
+            const activeDraw = getActiveDraw();
+
+            if (!activeDraw || activeDraw.status === 'expired') {
+                container.innerHTML = `
+                    <div class="text-center relative z-10 w-full">
+                        <div class="crystal-ball mx-auto mb-10 floating">
+                            <span class="text-7xl drop-shadow-2xl z-10">🌍</span>
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-bold font-mali mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 pb-1">ดวงชะตาความยั่งยืนของคุณคืออะไร?</h2>
+                        <p class="text-purple-200 mb-10 max-w-lg mx-auto text-lg leading-relaxed">ให้แม่หมอช่วยเปิดไพ่ 1 ใบ เพื่อรับคำทำนายรายวัน<br>และทำภารกิจพิทักษ์โลกเพื่อสะสมแต้มบุญกันเถอะ!</p>
+                        <button id="btnDrawCard" class="btn-magic bg-gradient-to-b from-[#FFF59D] to-[#FBC02D] border-2 border-white text-[#4A1E6D] text-2xl font-bold font-mali px-10 py-5 rounded-full flex items-center justify-center mx-auto gap-3">
+                            <i data-lucide="sparkles" class="w-7 h-7"></i> เปิดไพ่ทำนายดวงวันนี้
+                        </button>
+                    </div>
+                `;
+            } else {
+                const card = state.cards.find(c => c.id === activeDraw.cardId);
+                if (!card) { container.innerHTML = `<p>กำลังโหลดข้อมูลไพ่...</p>`; return; }
+
+                let imageElement = (card.imageUrl && (card.imageUrl.startsWith('data:image') || card.imageUrl.startsWith('http')))
+                    ? `<img src="${card.imageUrl}" class="w-full h-[220px] object-cover rounded-lg border-2 border-yellow-600/30" alt="Card Image">`
+                    : `<div class="text-8xl py-10 drop-shadow-lg">${card.imageUrl || '🃏'}</div>`;
+
+                let statusHTML = activeDraw.status === 'pending' ? `
+                    <div class="pt-6 border-t border-purple-400/30">
+                        <div class="flex flex-col sm:flex-row items-center justify-between mb-5 gap-3">
+                            <span class="text-purple-200 flex items-center gap-2 bg-purple-900/50 px-4 py-2 rounded-full border border-purple-500/50">
+                                <i data-lucide="hourglass" class="w-5 h-5 text-yellow-400"></i> เวลาเหลือ: <strong class="text-yellow-300 tracking-wider" id="countdownTimer">คำนวณ...</strong>
+                            </span>
+                        </div>
+                        
+                        <!-- ส่วนแนบรูปถ่าย (ไม่บังคับ) -->
+                        <div class="bg-purple-950/40 p-4 rounded-2xl border border-purple-500/30 mb-5 text-left">
+                            <label class="block text-sm font-bold font-mali text-yellow-300 mb-2 flex items-center gap-2">
+                                <i data-lucide="camera" class="w-4 h-4"></i> แนบรูปถ่ายยืนยัน (ไม่บังคับ)
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <label class="cursor-pointer bg-purple-800/80 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl border border-purple-500/50 flex items-center gap-2 transition-colors text-sm shadow-md">
+                                    <i data-lucide="image-plus" class="w-4 h-4"></i> เลือกรูปภาพ
+                                    <input type="file" id="missionImageUpload" class="hidden" accept="image/*">
+                                </label>
+                                <div id="missionImagePreviewContainer" class="hidden relative">
+                                    <img id="missionImagePreview" src="" class="w-12 h-12 object-cover rounded-lg border border-yellow-400/50 shadow-md">
+                                    <button id="btnRemoveMissionImage" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 shadow transition-colors"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                </div>
+                                <span id="missionImageText" class="text-xs text-purple-300/70">ยังไม่ได้เลือกรูปภาพ</span>
+                            </div>
+                        </div>
+
+                        <button id="btnCompleteMission" data-id="${activeDraw.id}" data-pts="${card.pointsReward}" class="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 text-purple-950 font-bold text-xl font-mali py-4 rounded-2xl shadow-[0_5px_15px_rgba(16,185,129,0.4)] flex justify-center items-center gap-2 transition-transform hover:scale-[1.02]">
+                            <i data-lucide="check-circle" class="w-6 h-6"></i> ยืนยันการทำภารกิจ
+                        </button>
+                    </div>
+                ` : `
+                    <div class="pt-6 border-t border-purple-400/30 text-center">
+                        <div class="bg-gradient-to-b from-green-500/20 to-emerald-600/20 text-green-300 p-6 rounded-2xl border border-green-400/40 flex flex-col items-center gap-3 backdrop-blur-sm">
+                            <div class="bg-green-400 text-purple-900 rounded-full p-2 mb-1"><i data-lucide="check" class="w-8 h-8 stroke-[3]"></i></div>
+                            <h3 class="text-2xl font-bold font-mali text-green-400">ยอดเยี่ยม! ภารกิจสำเร็จ</h3>
+                            <p class="text-green-100 text-lg">คุณได้รับ <strong class="text-yellow-300">${card.pointsReward} แต้มบุญ</strong><br>กลับมาเปิดไพ่ใหม่ได้ในวันพรุ่งนี้นะจ๊ะ</p>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = `
+                    <div class="w-full flex flex-col md:flex-row gap-10 items-center md:items-start relative z-10">
+                        <div class="w-full md:w-5/12 flex flex-col items-center">
+                            <div class="tarot-card w-full max-w-[300px] aspect-[2/3] p-4 flex flex-col relative text-gray-800">
+                                <div class="absolute -top-4 -right-4 bg-gradient-to-br from-yellow-400 to-orange-500 text-purple-900 font-bold px-4 py-1.5 rounded-full text-sm z-10 shadow-lg border-2 border-white transform rotate-6 font-mali">
+                                    SDG ${card.sdgTopic}
+                                </div>
+                                <div class="border-2 border-yellow-600/20 rounded-xl p-2 flex-1 flex flex-col">
+                                    <div class="flex-1 flex items-center justify-center bg-gradient-to-b from-blue-50 to-white rounded-lg mb-3 shadow-inner overflow-hidden">
+                                        ${imageElement}
+                                    </div>
+                                    <div class="bg-yellow-100/50 rounded-lg p-2 text-center border border-yellow-600/20">
+                                        <h3 class="font-bold font-mali text-lg leading-tight text-yellow-900">${card.title}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-7/12 space-y-6">
+                            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                                <div class="absolute top-0 left-0 w-2 bg-yellow-400 h-full"></div>
+                                <h2 class="text-2xl font-bold font-mali text-yellow-300 flex items-center gap-2 mb-3">
+                                    <i data-lucide="sparkles" class="w-6 h-6 text-yellow-400"></i> คำทำนายจากแม่หมอ
+                                </h2>
+                                <p class="text-lg text-purple-50 leading-relaxed font-light">"${card.fortuneText}"</p>
+                            </div>
+                            
+                            <div class="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 p-6 rounded-2xl border border-indigo-400/30 shadow-lg relative overflow-hidden">
+                                <div class="absolute -right-4 -top-4 text-6xl opacity-10 rotate-12">🌿</div>
+                                <h3 class="text-xl font-bold font-mali text-green-300 mb-3 flex items-center gap-2">
+                                    <i data-lucide="target" class="w-6 h-6"></i> ภารกิจเสริมดวง (รับ ${card.pointsReward} แต้ม)
+                                </h3>
+                                <p class="text-white text-lg mb-4 relative z-10">${card.missionText}</p>
+                                <div class="inline-block bg-yellow-400/10 border border-yellow-400/30 text-yellow-200 px-4 py-2 rounded-xl text-sm font-medium backdrop-blur-sm relative z-10">
+                                    <span class="text-yellow-400 mr-1">💡 เคล็ดลับ:</span> ${card.luckyTip}
+                                </div>
+                            </div>
+                            ${statusHTML}
+                        </div>
+                    </div>
+                `;
+                if (activeDraw.status === 'pending') startTimer(activeDraw.expiresAt);
+            }
+            lucide.createIcons();
+        }
+
+        function startTimer(expiresAt) {
+            if (state.timerInterval) clearInterval(state.timerInterval);
+            const updateTimer = () => {
+                const timerEl = document.getElementById('countdownTimer');
+                if (!timerEl) return clearInterval(state.timerInterval);
+                const diff = expiresAt - Date.now();
+                if (diff <= 0) { timerEl.innerText = 'หมดเวลาแล้ว'; checkAndExpireDraws(); clearInterval(state.timerInterval); return; }
+                const h = Math.floor(diff / (1000 * 60 * 60)), m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)), s = Math.floor((diff % (1000 * 60)) / 1000);
+                timerEl.innerText = `${h} ชม. ${m} นาที ${s} วินาที`;
+            };
+            updateTimer(); state.timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        async function handleDrawCard() {
+            const simulatedCards = state.cards.length > 0 ? state.cards : DEFAULT_CARDS;
+            const activeCards = simulatedCards.filter(c => c.isActive || state.role === 'admin');
+            
+            if (activeCards.length === 0) return showModal('แจ้งเตือน', 'ยังไม่มีสำรับไพ่ กรุณาให้ Admin เพิ่มไพ่ก่อนจ้า');
+            
+            const container = document.getElementById('homeContainer');
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-10 w-full h-full relative z-10">
+                    <div class="crystal-ball mb-8">
+                        <i data-lucide="sparkles" class="w-16 h-16 text-white animate-spin"></i>
+                    </div>
+                    <p class="text-2xl font-bold font-mali text-yellow-300 animate-pulse tracking-wide">แม่หมอกำลังสื่อสารกับจักรวาล...</p>
+                </div>
+            `;
+            lucide.createIcons();
+
+            setTimeout(async () => {
+                const randomCard = activeCards[Math.floor(Math.random() * activeCards.length)];
+                try {
+                    if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                        state.userDraws = [{ id: 'mock-draw', cardId: randomCard.id, drawnAt: Date.now(), expiresAt: Date.now() + (24 * 60 * 60 * 1000), status: 'pending' }];
+                        renderHome();
+                        return;
+                    }
+
+                    await supabaseClient.from('daily_draws').insert([{ 
+                        user_id: state.user.id, "cardId": randomCard.id, "drawnAt": Date.now(), "expiresAt": Date.now() + (24 * 60 * 60 * 1000), status: 'pending' 
+                    }]);
+                    await fetchData();
+                } catch (e) { console.error("Draw Error", e); renderHome(); }
+            }, 2500);
+        }
+
+        async function handleCompleteMission(drawId, pointsReward) {
+            try {
+                const btn = document.getElementById('btnCompleteMission');
+                if (btn) { btn.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i> กำลังบันทึก...'; btn.disabled = true; lucide.createIcons(); }
+
+                if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                    state.userDraws[0].status = 'completed';
+                    state.points += parseInt(pointsReward);
+                    document.getElementById('pointsText').innerText = `แต้มบุญ: ${state.points}`;
+                    state.missionProofImage = null; 
+                    renderHome();
+                    return;
+                }
+
+                const updateData = { status: 'completed' };
+                if (state.missionProofImage) {
+                    updateData.proofImage = state.missionProofImage;
+                }
+
+                await supabaseClient.from('daily_draws').update(updateData).eq('id', drawId);
+                const newPoints = state.points + parseInt(pointsReward);
+                await supabaseClient.from('profiles').update({ points: newPoints }).eq('id', state.user.id);
+                
+                state.missionProofImage = null; 
+                await fetchData();
+            } catch (e) { console.error("Complete Mission Error", e); }
+        }
+
+        function handleMissionImageUpload(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const textEl = document.getElementById('missionImageText');
+            textEl.innerText = 'กำลังบีบอัด...';
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width, height = img.height;
+                    if (width > height) { if (width > 500) { height *= 500 / width; width = 500; } } 
+                    else { if (height > 500) { width *= 500 / height; height = 500; } }
+                    const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    
+                    state.missionProofImage = dataUrl;
+                    document.getElementById('missionImagePreview').src = dataUrl;
+                    document.getElementById('missionImagePreviewContainer').classList.remove('hidden');
+                    textEl.classList.add('hidden');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        const chatState = { messages: [{ role: 'bot', text: 'สวัสดีจ้าลูกดวงของแม่หมอ! วันนี้มีเรื่องอะไรให้แม่หมอช่วยดูดวง หรืออยากถามเรื่องเป้าหมายความยั่งยืน (SDGs) ข้อไหน พิมพ์มาคุยกันได้เลยนะจ๊ะ 🔮' }], isTyping: false };
+
+        function renderChat() {
+            const chatBox = document.getElementById('chatMessages');
+            let html = '';
+            chatState.messages.forEach(msg => {
+                const isUser = msg.role === 'user';
+                html += `
+                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-[85%] p-4 text-base leading-relaxed ${isUser ? 'chat-user font-medium' : 'chat-bot'}">${msg.text.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            });
+            if (chatState.isTyping) {
+                html += `
+                    <div class="flex justify-start">
+                        <div class="chat-bot p-4 flex space-x-2 items-center h-12 w-20 justify-center">
+                            <div class="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce"></div>
+                            <div class="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            chatBox.innerHTML = html;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function handleSendChat() {
+            const inputEl = document.getElementById('chatInput');
+            const text = inputEl.value.trim();
+            if (!text || chatState.isTyping) return;
+
+            inputEl.value = '';
+            chatState.messages.push({ role: 'user', text });
+            chatState.isTyping = true; renderChat();
+
+            try {
+                const empId = state.user ? state.user.email.split('@')[0].toUpperCase() : 'พนักงานปริศนา';
+                const currentPoints = state.points || 0;
+                
+                const systemPrompt = `คุณคือ 'แม่หมอ SD' หมอดูใจดี อารมณ์ดี มีความรู้ลึกซึ้งเรื่องเป้าหมายการพัฒนาที่ยั่งยืน (SDGs) ทั้ง 17 ข้อ ตอบคำถาม ให้คำปรึกษา แนะนำภารกิจที่ทำได้จริง และเชื่อมโยงเรื่องราวเข้ากับ SDGs ด้วยน้ำเสียงอบอุ่น เป็นกันเอง ลงท้ายด้วยจ้า หรือ นะจ๊ะ ตอนนี้คุณกำลังดูดวงให้กับพนักงานรหัส: ${empId} ซึ่งตอนนี้เขามีแต้มบุญสะสมอยู่ ${currentPoints} แต้ม (สามารถทักทาย เรียกชื่อเขาด้วยรหัส หรือชมเรื่องแต้มบุญได้ถ้าเหมาะสม)`;
+
+                const historyToSent = chatState.messages.length > 1 ? chatState.messages.slice(1).slice(-10) : [];
+                const recentMessages = historyToSent.map(msg => ({
+                    role: msg.role === 'bot' ? 'assistant' : 'user',
+                    content: msg.text
+                }));
+
+                let apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+                let fetchOptions = {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${GROQ_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "llama3-8b-8192", 
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            ...recentMessages
+                        ]
+                    })
+                };
+
+                const isCanvasEnv = GROQ_API_KEY.includes('YOUR_GROQ');
+                if (isCanvasEnv) {
+                    const canvasApiKey = ""; 
+                    apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${canvasApiKey}`;
+                    
+                    const geminiHistory = historyToSent.map(msg => ({
+                        role: msg.role === 'bot' ? 'model' : 'user',
+                        parts: [{ text: msg.text }]
+                    }));
+
+                    fetchOptions = {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: geminiHistory,
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        })
+                    };
+                }
+
+                const response = await fetch(apiUrl, fetchOptions);
+                const data = await response.json();
+                
+                let botReply = "ขออภัยจ้า แม่หมอสื่อสารกับจักรวาลไม่ติดเลย (ตรวจสอบ API Key หน่อยนะจ๊ะ)";
+                
+                if(isCanvasEnv && data.candidates) {
+                    botReply = data.candidates[0].content.parts[0].text;
+                } else if(!isCanvasEnv && data.choices) {
+                    botReply = data.choices[0].message.content;
+                }
+
+                chatState.messages.push({ role: 'bot', text: botReply });
+            } catch (e) { 
+                console.error(e);
+                chatState.messages.push({ role: 'bot', text: "อุ๊ย! สัญญาณญาณทิพย์ขัดข้องจ้า ลองส่งมาใหม่อีกทีนะลูก (หรือตรวจสอบ API Key)" }); 
+            } 
+            finally { chatState.isTyping = false; renderChat(); }
+        }
+
+        function renderAdmin() {
+            const listEl = document.getElementById('adminCardList');
+            if(state.cards.length === 0) { listEl.innerHTML = '<div class="col-span-full text-center py-10 text-purple-300 glass-panel rounded-2xl border-dashed">ยังไม่มีไพ่ในระบบ</div>'; return; }
+
+            let html = '';
+            state.cards.forEach(card => {
+                let imgDisplay = card.imageUrl && (card.imageUrl.startsWith('data:') || card.imageUrl.startsWith('http')) 
+                    ? `<img src="${card.imageUrl}" class="w-16 h-24 object-cover rounded-md border border-yellow-500/50 shadow-sm">` 
+                    : `<div class="text-5xl w-16 h-24 flex items-center justify-center bg-white/10 rounded-md border border-white/20">${card.imageUrl || '🃏'}</div>`;
+
+                html += `
+                    <div class="bg-purple-900/60 p-5 rounded-2xl border border-purple-400/30 relative flex flex-col h-full shadow-lg group hover:border-yellow-400/50 transition-colors backdrop-blur-sm">
+                        <button class="btn-delete-card absolute top-3 right-3 text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500 p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100" data-id="${card.id}">
+                            <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                        </button>
+                        <div class="flex items-start gap-4 mb-4">
+                            ${imgDisplay}
+                            <div class="flex-1 mt-1">
+                                <span class="text-[10px] bg-gradient-to-r from-yellow-400 to-yellow-500 text-purple-900 px-2.5 py-0.5 rounded-full font-bold shadow-sm">SDG ${card.sdgTopic}</span>
+                                <h3 class="font-bold font-mali text-white text-lg mt-1.5 leading-tight line-clamp-2">${card.title}</h3>
+                            </div>
+                        </div>
+                        <div class="text-xs text-purple-100 flex-1 space-y-2 bg-purple-950/50 p-3 rounded-xl border border-purple-500/20">
+                            <p class="line-clamp-2"><span class="text-yellow-300 mr-1">🔮:</span> ${card.fortuneText}</p>
+                            <p class="line-clamp-2"><span class="text-green-400 mr-1">🌿:</span> ${card.missionText}</p>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center text-sm font-bold bg-purple-950/80 px-3 py-2 rounded-lg">
+                            <span class="text-yellow-400 flex items-center gap-1"><i data-lucide="award" class="w-4 h-4"></i> ${card.pointsReward} แต้ม</span>
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html; lucide.createIcons();
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const urlInput = document.getElementById('f_imageUrl'); urlInput.value = 'กำลังบีบอัดรูปภาพ...';
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    let width = img.width, height = img.height;
+                    if (width > height) { if (width > 400) { height *= 400 / width; width = 400; } } 
+                    else { if (height > 400) { width *= 400 / height; height = 400; } }
+                    const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    urlInput.value = dataUrl;
+                    document.getElementById('f_imagePreview').src = dataUrl;
+                    document.getElementById('f_imagePreview').classList.remove('hidden');
+                    document.getElementById('f_imagePlaceholder').classList.add('hidden');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleSaveCard() {
+            const sdgTopic = document.getElementById('f_sdgTopic').value, title = document.getElementById('f_title').value,
+                  fortuneText = document.getElementById('f_fortuneText').value, missionText = document.getElementById('f_missionText').value,
+                  luckyTip = document.getElementById('f_luckyTip').value, pointsReward = document.getElementById('f_pointsReward').value,
+                  imageUrl = document.getElementById('f_imageUrl').value;
+            if (!title || !fortuneText || !missionText) return showModal('แจ้งเตือน', 'กรุณากรอกข้อมูลสำคัญให้ครบถ้วนนะจ๊ะ');
+            
+            try {
+                const btn = document.getElementById('saveCardBtn'); btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> กำลังบันทึก...'; btn.disabled = true; lucide.createIcons();
+                
+                if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                    state.cards.push({ id: Date.now(), sdgTopic: Number(sdgTopic), title, fortuneText, missionText, luckyTip, pointsReward: Number(pointsReward), imageUrl, isActive: true });
+                } else {
+                    await supabaseClient.from('cards').insert([{ "sdgTopic": Number(sdgTopic), title, "fortuneText": fortuneText, "missionText": missionText, "luckyTip": luckyTip, "pointsReward": Number(pointsReward), "imageUrl": imageUrl, "isActive": true, "createdAt": Date.now() }]);
+                    await fetchData();
+                }
+
+                ['f_title','f_fortuneText','f_missionText','f_luckyTip','f_imageUrl'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('f_imagePreview').classList.add('hidden'); document.getElementById('f_imagePlaceholder').classList.remove('hidden');
+                document.getElementById('addCardForm').classList.add('hidden');
+                
+                showModal('สำเร็จ!', 'แม่หมอเก็บไพ่ใบใหม่เข้าสำรับเรียบร้อยแล้วจ้า');
+                if(SUPABASE_URL.includes('YOUR_SUPABASE')) renderAdmin();
+
+            } catch (e) { 
+                console.error("Save Error", e); showModal('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ กรุณาตรวจสอบ Policy ใน Supabase'); 
+            } finally { 
+                const btn = document.getElementById('saveCardBtn'); 
+                btn.innerHTML = '<i data-lucide="save" class="w-5 h-5"></i> บันทึกไพ่ลงในสำรับ'; btn.disabled = false; lucide.createIcons();
+            }
+        }
+
+        let confirmCallback = null;
+        function showModal(title, message, isConfirm = false, onConfirm = null) {
+            document.getElementById('modalTitle').innerHTML = `<i data-lucide="${isConfirm ? 'alert-triangle' : 'sparkles'}" class="w-6 h-6 text-yellow-400"></i> ${title}`;
+            document.getElementById('modalMessage').innerText = message;
+            document.getElementById('customModal').classList.remove('hidden');
+            const cancelBtn = document.getElementById('modalCancel');
+            if (isConfirm) { cancelBtn.classList.remove('hidden'); confirmCallback = onConfirm; } 
+            else { cancelBtn.classList.add('hidden'); confirmCallback = null; }
+            lucide.createIcons();
+        }
+        function hideModal() { document.getElementById('customModal').classList.add('hidden'); }
+
+        function setupEventListeners() {
+            document.addEventListener('click', (e) => {
+                const tabBtn = e.target.closest('.tab-btn'); if (tabBtn) switchTab(tabBtn.dataset.tab);
+                if (e.target.closest('#btnDrawCard')) handleDrawCard();
+                const completeBtn = e.target.closest('#btnCompleteMission'); if (completeBtn) handleCompleteMission(completeBtn.dataset.id, completeBtn.dataset.pts);
+                if (e.target.closest('#chatSendBtn')) handleSendChat();
+                if (e.target.closest('#toggleAddCardBtn')) document.getElementById('addCardForm').classList.toggle('hidden');
+                if (e.target.id === 'saveCardBtn') handleSaveCard();
+                const delBtn = e.target.closest('.btn-delete-card');
+                if (delBtn) showModal('ยืนยันการลบไพ่', 'คุณแน่ใจหรือไม่ว่าต้องการเผาไพ่ใบนี้ทิ้ง? ข้อมูลจะไม่สามารถกู้คืนได้นะจ๊ะ', true, async () => { 
+                    if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
+                        state.cards = state.cards.filter(c => c.id != delBtn.dataset.id);
+                        renderAdmin();
+                    } else {
+                        await supabaseClient.from('cards').delete().eq('id', delBtn.dataset.id);
+                        await fetchData();
+                    }
+                });
+                if (e.target.id === 'modalConfirm') { hideModal(); if (confirmCallback) confirmCallback(); }
+                if (e.target.id === 'modalCancel') hideModal();
+                
+                // Auth
+                if (e.target.closest('#btnEnter')) handleEnter();
+                if (e.target.closest('#logoutBtn')) handleLogout();
+
+                // ลบรูปภาพภารกิจ
+                if (e.target.closest('#btnRemoveMissionImage')) {
+                    state.missionProofImage = null;
+                    document.getElementById('missionImagePreviewContainer').classList.add('hidden');
+                    document.getElementById('missionImageUpload').value = '';
+                    const textEl = document.getElementById('missionImageText');
+                    textEl.innerText = 'ยังไม่ได้เลือกรูปภาพ';
+                    textEl.classList.remove('hidden');
+                }
+            });
+            document.getElementById('f_imageUpload').addEventListener('change', handleImageUpload);
+            
+            document.addEventListener('change', (e) => {
+                if (e.target.id === 'missionImageUpload') handleMissionImageUpload(e);
+            });
+
+            document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendChat(); });
+            document.getElementById('authEmpId').addEventListener('input', function (e) { this.value = this.value.replace(/[^0-9]/g, ''); });
+
+            let secretClickCount = 0;
+            let secretClickTimer = null;
+            document.getElementById('secretAdminTrigger').addEventListener('click', () => {
+                secretClickCount++;
+                clearTimeout(secretClickTimer);
+                if(secretClickCount >= 5) {
+                    secretClickCount = 0;
+                    if(state.role === 'admin') {
+                        state.role = 'user';
+                        renderAll();
+                        alert('ออกจากโหมด Admin แล้วจ้า');
+                        return;
+                    }
+                    const pass = prompt('🔮 คาถาลับสำหรับแม่หมอ:');
+                    if(pass === 'SD2026') { 
+                        state.role = 'admin';
+                        renderAll();
+                        alert('ปลดล็อคโหมดจัดการไพ่ (Admin) แล้วจ้า!');
+                    } else if (pass !== null) {
+                        alert('คาถาไม่ถูกต้องนะจ๊ะ');
+                    }
+                } else {
+                    secretClickTimer = setTimeout(() => secretClickCount = 0, 1000); 
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => { renderChat(); init(); });
+        } else {
+            renderChat(); init();
+        }
+    </script>
+</body>
+</html>
