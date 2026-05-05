@@ -141,7 +141,7 @@
     <!-- Navbar -->
     <nav class="p-3 md:p-4 glass-panel sticky top-0 z-50 border-b border-purple-400/30 shadow-lg">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <!-- ปุ่มลับสำหรับ Admin (กด 5 ครั้งที่โลโก้) - เปลี่ยนมาใช้ touch-manipulation -->
+            <!-- ปุ่มลับสำหรับ Admin (กด 5 ครั้งที่โลโก้) -->
             <div class="flex items-center space-x-3 cursor-pointer touch-manipulation transition-transform active:scale-90" id="secretAdminTrigger">
                 <div class="w-10 h-10 md:w-12 md:h-12 bg-yellow-400 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(253,224,71,0.6)] shrink-0">
                     <i data-lucide="sparkles" class="text-purple-900 w-5 h-5 md:w-6 md:h-6"></i>
@@ -564,6 +564,7 @@
         function getActiveDraw() {
             return state.userDraws.find(d => {
                 const isPending = d.status === 'pending';
+                // นำสถานะ completed มารวมด้วย เพื่อตรวจสอบเวลาที่เหลือ (24 ชั่วโมงหลังจากการจั่วไพ่)
                 const isCompletedToday = d.status === 'completed' && (Date.now() - d.drawnAt) < 24 * 60 * 60 * 1000;
                 return isPending || isCompletedToday;
             });
@@ -612,10 +613,54 @@
                         </button>
                     </div>
                 `;
-            } else {
+                lucide.createIcons();
+            } else if (activeDraw.status === 'completed') {
                 const card = state.cards.find(c => c.id === activeDraw.cardId);
                 
-                // ระบบฟื้นฟูอัตโนมัติ (Auto-Recovery) กรณีไพ่บั๊กหรือถูกลบ
+                // ระบบฟื้นฟูอัตโนมัติ (Auto-Recovery)
+                if (!card) { 
+                    if(!SUPABASE_URL.includes('YOUR_SUPABASE') && activeDraw.id !== 'mock-draw') {
+                        supabaseClient.from('daily_draws').delete().eq('id', activeDraw.id).then(() => fetchData());
+                    } else {
+                        state.userDraws = state.userDraws.filter(d => d.id !== activeDraw.id);
+                        setTimeout(renderHome, 1000);
+                    }
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 text-center w-full relative z-10">
+                            <i data-lucide="loader-2" class="w-10 h-10 md:w-12 md:h-12 text-yellow-400 animate-spin mb-4 mx-auto"></i>
+                            <p class="text-lg md:text-xl font-bold font-mali text-yellow-200">กำลังรีเซ็ตพลังงานไพ่ที่สูญหาย...</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return; 
+                }
+
+                // 🌟 หน้าจอพิเศษหลังทำภารกิจสำเร็จ (ซ่อนไพ่และซ่อนฟอร์ม)
+                container.innerHTML = `
+                    <div class="text-center relative z-10 w-full stagger-1 py-4 md:py-10">
+                        <div class="bg-gradient-to-b from-green-500/20 to-emerald-600/20 p-6 md:p-12 rounded-[2rem] border border-green-400/40 flex flex-col items-center gap-4 md:gap-6 backdrop-blur-sm shadow-xl max-w-2xl mx-auto relative overflow-hidden">
+                            <div class="absolute -right-10 -bottom-10 text-9xl opacity-10 pointer-events-none">🌟</div>
+                            <div class="absolute -left-10 -top-10 text-9xl opacity-10 pointer-events-none">🎉</div>
+                            <div class="bg-green-400 text-purple-900 rounded-full p-4 mb-2 shadow-[0_0_30px_rgba(74,222,128,0.6)] animate-bounce"><i data-lucide="check-circle" class="w-12 h-12 md:w-16 md:h-16 stroke-[2.5]"></i></div>
+                            <h3 class="text-3xl md:text-5xl font-bold font-mali text-green-400 drop-shadow-md">ภารกิจสำเร็จแล้ว!</h3>
+                            <p class="text-green-100 text-lg md:text-xl font-light px-4">คุณได้รับ <strong class="text-yellow-300 font-bold text-2xl md:text-3xl">${card.pointsReward} แต้มบุญ</strong> จากไพ่ <span class="font-bold text-yellow-100">${card.title}</span></p>
+                            
+                            <div class="bg-purple-900/80 rounded-2xl p-6 md:p-8 w-full border border-purple-500/50 mt-4 shadow-inner relative z-10">
+                                <p class="text-purple-200 text-base md:text-lg mb-2 font-mali flex justify-center items-center gap-2"><i data-lucide="sparkles" class="w-5 h-5 text-yellow-400"></i> แม่หมอกำลังรวบรวมพลังงานจักรวาลใหม่...</p>
+                                <p class="text-white text-sm md:text-base mb-4 font-light">คุณจะสามารถสุ่มไพ่ใบต่อไปได้ในอีก</p>
+                                <div class="text-4xl md:text-5xl font-bold font-mali text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 tracking-wider drop-shadow-sm" id="countdownTimer">คำนวณ...</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+                // เริ่มนับถอยหลังถึง 24 ชั่วโมงจากที่กดสุ่ม
+                if (activeDraw.expiresAt) startTimer(activeDraw.expiresAt);
+                
+            } else {
+                // กรณีเป็น Pending (กำลังรอทำภารกิจ)
+                const card = state.cards.find(c => c.id === activeDraw.cardId);
+                
                 if (!card) { 
                     if(!SUPABASE_URL.includes('YOUR_SUPABASE') && activeDraw.id !== 'mock-draw') {
                         supabaseClient.from('daily_draws').delete().eq('id', activeDraw.id).then(() => fetchData());
@@ -636,57 +681,6 @@
                 let imageElement = (card.imageUrl && (card.imageUrl.startsWith('data:image') || card.imageUrl.startsWith('http')))
                     ? `<img src="${card.imageUrl}" class="w-full h-full object-cover rounded-lg border-2 border-yellow-600/30" alt="Card Image">`
                     : `<div class="text-7xl md:text-8xl py-6 drop-shadow-lg">${card.imageUrl || '🃏'}</div>`;
-
-                let statusHTML = activeDraw.status === 'pending' ? `
-                    <div class="pt-6 border-t border-purple-400/30 stagger-4">
-                        <div class="flex items-center justify-between mb-5 bg-purple-900/40 p-3 rounded-xl border border-purple-500/30">
-                            <span class="text-purple-200 flex items-center gap-2 text-sm md:text-base font-medium">
-                                <i data-lucide="hourglass" class="w-5 h-5 text-yellow-400 animate-pulse"></i> เวลาเหลือ: <strong class="text-yellow-300 font-bold tracking-wider" id="countdownTimer">คำนวณ...</strong>
-                            </span>
-                        </div>
-                        
-                        <!-- แก้ไข: เพิ่มช่องกรอกข้อความเล่าสู่กันฟัง -->
-                        <div class="bg-gradient-to-br from-purple-950/80 to-indigo-950/80 p-4 md:p-5 rounded-2xl border border-purple-400/40 mb-5 text-left space-y-4 shadow-inner">
-                            
-                            <div>
-                                <label class="block text-sm md:text-base font-bold font-mali text-yellow-300 mb-2 flex items-center gap-2">
-                                    <i data-lucide="edit-3" class="w-4 h-4 md:w-5 md:h-5 text-yellow-400"></i> เล่าสู่กันฟัง (คุณทำอะไรไปบ้าง?) <span class="text-red-400">*</span>
-                                </label>
-                                <textarea id="missionNoteInput" rows="2" placeholder="ตัวอย่าง: วันนี้พกถุงผ้าไปซื้อของที่ร้านสะดวกซื้อ..." class="w-full bg-purple-900/60 rounded-xl p-3 md:p-4 text-white placeholder-purple-300/50 border border-purple-500/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none text-sm md:text-base transition-all"></textarea>
-                            </div>
-
-                            <div class="border-t border-purple-500/30 pt-4">
-                                <label class="block text-sm font-bold font-mali text-purple-200 mb-2 flex items-center gap-2">
-                                    <i data-lucide="camera" class="w-4 h-4"></i> แนบรูปถ่ายยืนยัน (ถ้ามีจะดีมาก)
-                                </label>
-                                <div class="flex items-center gap-3">
-                                    <label class="cursor-pointer bg-purple-800/80 hover:bg-purple-700 active:scale-95 text-white px-4 py-2.5 md:py-3 rounded-xl border border-purple-500/50 flex items-center justify-center gap-2 transition-all text-sm font-bold shadow-md w-full md:w-auto text-center touch-manipulation">
-                                        <i data-lucide="image-plus" class="w-5 h-5"></i> เลือกรูปภาพ
-                                        <input type="file" id="missionImageUpload" class="hidden" accept="image/*">
-                                    </label>
-                                    <div id="missionImagePreviewContainer" class="hidden relative shrink-0">
-                                        <img id="missionImagePreview" src="" class="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg border-2 border-yellow-400 shadow-md">
-                                        <button id="btnRemoveMissionImage" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-colors active:scale-90 touch-manipulation"><i data-lucide="x" class="w-3 h-3"></i></button>
-                                    </div>
-                                    <span id="missionImageText" class="text-xs md:text-sm text-purple-300/70 hidden md:block">ยังไม่ได้เลือกรูปภาพ</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button id="btnCompleteMission" data-id="${activeDraw.id}" data-pts="${card.pointsReward}" class="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 active:scale-95 text-purple-950 font-bold text-lg md:text-xl font-mali py-4 rounded-2xl shadow-[0_5px_15px_rgba(16,185,129,0.4)] flex justify-center items-center gap-2 transition-all touch-manipulation">
-                            <i data-lucide="check-circle-2" class="w-6 h-6 md:w-7 md:h-7"></i> ยืนยันการทำภารกิจสำเร็จ
-                        </button>
-                    </div>
-                ` : `
-                    <div class="pt-6 border-t border-purple-400/30 text-center stagger-4">
-                        <div class="bg-gradient-to-b from-green-500/20 to-emerald-600/20 text-green-300 p-5 md:p-8 rounded-3xl border border-green-400/40 flex flex-col items-center gap-3 md:gap-4 backdrop-blur-sm shadow-inner relative overflow-hidden">
-                            <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">🌟</div>
-                            <div class="bg-green-400 text-purple-900 rounded-full p-3 mb-1 shadow-[0_0_20px_rgba(74,222,128,0.5)]"><i data-lucide="check" class="w-8 h-8 md:w-10 md:h-10 stroke-[3]"></i></div>
-                            <h3 class="text-2xl md:text-3xl font-bold font-mali text-green-400 drop-shadow-md">ยอดเยี่ยม! ภารกิจสำเร็จ</h3>
-                            <p class="text-green-100 text-base md:text-lg">คุณได้รับ <strong class="text-yellow-300 font-bold text-xl md:text-2xl">${card.pointsReward} แต้มบุญ</strong><br>กลับมาเปิดไพ่ใบใหม่ได้ในวันพรุ่งนี้นะจ๊ะ</p>
-                        </div>
-                    </div>
-                `;
 
                 container.innerHTML = `
                     <div class="w-full flex flex-col lg:flex-row gap-8 lg:gap-10 items-center lg:items-start relative z-10">
@@ -724,13 +718,51 @@
                                     <span class="text-yellow-400 mr-1"><i data-lucide="lightbulb" class="inline w-3 h-3 md:w-4 md:h-4 -mt-1"></i> เคล็ดลับ:</span> ${card.luckyTip}
                                 </div>
                             </div>
-                            ${statusHTML}
+                            
+                            <div class="pt-6 border-t border-purple-400/30 stagger-4">
+                                <div class="flex items-center justify-between mb-5 bg-purple-900/40 p-3 rounded-xl border border-purple-500/30">
+                                    <span class="text-purple-200 flex items-center gap-2 text-sm md:text-base font-medium">
+                                        <i data-lucide="hourglass" class="w-5 h-5 text-yellow-400 animate-pulse"></i> เวลาส่งภารกิจ: <strong class="text-yellow-300 font-bold tracking-wider" id="countdownTimer">คำนวณ...</strong>
+                                    </span>
+                                </div>
+                                
+                                <div class="bg-gradient-to-br from-purple-950/80 to-indigo-950/80 p-4 md:p-5 rounded-2xl border border-purple-400/40 mb-5 text-left space-y-4 shadow-inner">
+                                    
+                                    <div>
+                                        <label class="block text-sm md:text-base font-bold font-mali text-yellow-300 mb-2 flex items-center gap-2">
+                                            <i data-lucide="edit-3" class="w-4 h-4 md:w-5 md:h-5 text-yellow-400"></i> เล่าสู่กันฟัง (คุณทำอะไรไปบ้าง?) <span class="text-red-400">*</span>
+                                        </label>
+                                        <textarea id="missionNoteInput" rows="2" placeholder="ตัวอย่าง: วันนี้พกถุงผ้าไปซื้อของที่ร้านสะดวกซื้อ..." class="w-full bg-purple-900/60 rounded-xl p-3 md:p-4 text-white placeholder-purple-300/50 border border-purple-500/50 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none text-sm md:text-base transition-all"></textarea>
+                                    </div>
+
+                                    <div class="border-t border-purple-500/30 pt-4">
+                                        <label class="block text-sm font-bold font-mali text-purple-200 mb-2 flex items-center gap-2">
+                                            <i data-lucide="camera" class="w-4 h-4"></i> แนบรูปถ่ายยืนยัน (ถ้ามีจะดีมาก)
+                                        </label>
+                                        <div class="flex items-center gap-3">
+                                            <label class="cursor-pointer bg-purple-800/80 hover:bg-purple-700 active:scale-95 text-white px-4 py-2.5 md:py-3 rounded-xl border border-purple-500/50 flex items-center justify-center gap-2 transition-all text-sm font-bold shadow-md w-full md:w-auto text-center touch-manipulation">
+                                                <i data-lucide="image-plus" class="w-5 h-5"></i> เลือกรูปภาพ
+                                                <input type="file" id="missionImageUpload" class="hidden" accept="image/*">
+                                            </label>
+                                            <div id="missionImagePreviewContainer" class="hidden relative shrink-0">
+                                                <img id="missionImagePreview" src="" class="w-12 h-12 md:w-14 md:h-14 object-cover rounded-lg border-2 border-yellow-400 shadow-md">
+                                                <button id="btnRemoveMissionImage" class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-colors active:scale-90 touch-manipulation"><i data-lucide="x" class="w-3 h-3"></i></button>
+                                            </div>
+                                            <span id="missionImageText" class="text-xs md:text-sm text-purple-300/70 hidden md:block">ยังไม่ได้เลือกรูปภาพ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button id="btnCompleteMission" data-id="${activeDraw.id}" data-pts="${card.pointsReward}" class="w-full bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-300 hover:to-emerald-400 active:scale-95 text-purple-950 font-bold text-lg md:text-xl font-mali py-4 rounded-2xl shadow-[0_5px_15px_rgba(16,185,129,0.4)] flex justify-center items-center gap-2 transition-all touch-manipulation">
+                                    <i data-lucide="check-circle-2" class="w-6 h-6 md:w-7 md:h-7"></i> ยืนยันการทำภารกิจสำเร็จ
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
-                if (activeDraw.status === 'pending') startTimer(activeDraw.expiresAt);
+                lucide.createIcons();
+                if (activeDraw.expiresAt) startTimer(activeDraw.expiresAt);
             }
-            lucide.createIcons();
         }
 
         // --- เพิ่มฟังก์ชัน Render Leaderboard ---
@@ -1051,8 +1083,16 @@
                 const timerEl = document.getElementById('countdownTimer');
                 if (!timerEl) return clearInterval(state.timerInterval);
                 const diff = expiresAt - Date.now();
-                if (diff <= 0) { timerEl.innerText = 'หมดเวลาแล้ว'; checkAndExpireDraws(); clearInterval(state.timerInterval); return; }
-                const h = Math.floor(diff / (1000 * 60 * 60)), m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)), s = Math.floor((diff % (1000 * 60)) / 1000);
+                if (diff <= 0) { 
+                    timerEl.innerText = 'พร้อมสุ่มไพ่ใหม่แล้ว!'; 
+                    checkAndExpireDraws(); 
+                    clearInterval(state.timerInterval);
+                    setTimeout(renderHome, 1500); 
+                    return; 
+                }
+                const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
                 timerEl.innerText = `${h} ชม. ${m} นาที ${s} วินาที`;
             };
             updateTimer(); state.timerInterval = setInterval(updateTimer, 1000);
