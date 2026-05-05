@@ -115,7 +115,6 @@
                 <div class="bg-purple-900/80 px-4 py-1.5 rounded-full text-yellow-300 font-bold border border-yellow-500/30 flex items-center gap-2 shadow-inner" id="navPoints">
                     <span class="text-lg">✨</span> <span id="pointsText">แต้มบุญ: 0</span>
                 </div>
-                <!-- ลบปุ่ม สลับโหมด Admin เดิมออกไป -->
                 <button id="logoutBtn" class="bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors hidden border border-red-500/30">
                     ออกจากระบบ
                 </button>
@@ -281,10 +280,9 @@
         const SUPABASE_URL = 'https://cixiviikcoixsbcvafgl.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGl2aWlrY29peHNiY3ZhZmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5Mjg2NDUsImV4cCI6MjA5MzUwNDY0NX0.WQz-s2ZhcsDO6IjfCZIq7rZNPQddE7IuGrOH9EXdh-s';
         
-        // ⚠️⚠️⚠️ 2. ใส่ KEY ของ GROQ AI ตรงนี้ (คำเตือน: หากนำเว็บนี้ไปแปะบน Vercel แบบสาธารณะ คนอื่นอาจเห็น Key นี้ได้) ⚠️⚠️⚠️
+        // ⚠️⚠️⚠️ 2. ใส่ KEY ของ GROQ AI ตรงนี้ ⚠️⚠️⚠️
         const GROQ_API_KEY = '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'; 
 
-        // แก้ไข Error: Identifier 'supabase' has already been declared โดยเปลี่ยนชื่อตัวแปรเป็น supabaseClient
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const state = {
@@ -340,8 +338,8 @@
             document.getElementById('loadingOverlay').style.display = 'none';
             document.getElementById('logoutBtn').classList.remove('hidden');
             
-            const empId = user.email.split('@')[0].toUpperCase();
-            document.getElementById('toggleRoleBtn').innerText = `สลับโหมด Admin (${empId})`;
+            // ลบโค้ดบรรทัด toggleRoleBtn ที่เป็นตัวการทำให้ Error ออกแล้ว
+            // และดึงข้อมูลเริ่มทำงานต่อได้เลย
             
             await fetchData();
         }
@@ -759,6 +757,12 @@
                 const response = await fetch(apiUrl, fetchOptions);
                 const data = await response.json();
                 
+                // ดักจับ Error จาก API ถ้าการตั้งค่า Key ผิดพลาด
+                if (!response.ok) {
+                    console.error("API Error Response:", data);
+                    throw new Error(data.error?.message || "Bad Request");
+                }
+
                 let botReply = "ขออภัยจ้า แม่หมอสื่อสารกับจักรวาลไม่ติดเลย (ตรวจสอบ API Key หน่อยนะจ๊ะ)";
                 
                 if(isCanvasEnv && data.candidates) {
@@ -769,8 +773,8 @@
 
                 chatState.messages.push({ role: 'bot', text: botReply });
             } catch (e) { 
-                console.error(e);
-                chatState.messages.push({ role: 'bot', text: "อุ๊ย! สัญญาณญาณทิพย์ขัดข้องจ้า ลองส่งมาใหม่อีกทีนะลูก (หรือตรวจสอบ API Key)" }); 
+                console.error("Chat Error:", e);
+                chatState.messages.push({ role: 'bot', text: `อุ๊ย! สัญญาณญาณทิพย์ขัดข้องจ้า (${e.message || 'ลองส่งมาใหม่อีกทีนะลูก'})` }); 
             } 
             finally { chatState.isTyping = false; renderChat(); }
         }
