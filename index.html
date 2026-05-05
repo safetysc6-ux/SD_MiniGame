@@ -90,6 +90,23 @@
         <div class="absolute top-[30%] left-[80%] text-white opacity-30 floating text-lg">✨</div>
     </div>
 
+    <!-- Floating Fortune Chat (Popup ให้พรตอนทำภารกิจเสร็จ) -->
+    <div id="floatingFortune" class="fixed bottom-4 left-4 right-4 md:left-auto md:right-8 z-[200] md:max-w-sm transition-all duration-700 translate-y-[150%] opacity-0 pointer-events-none">
+        <div class="glass-panel border-2 border-yellow-400/50 rounded-2xl p-4 md:p-5 shadow-[0_10px_40px_rgba(0,0,0,0.6)] relative flex items-start gap-4 pointer-events-auto">
+            <button onclick="hideFloatingFortune()" class="absolute top-2 right-2 text-purple-300 hover:text-white bg-purple-900/50 rounded-full p-1 transition-colors active:scale-90"><i data-lucide="x" class="w-4 h-4 md:w-5 md:h-5"></i></button>
+            <div class="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-2xl md:text-3xl shadow-[0_0_15px_rgba(253,224,71,0.6)] bg-gradient-to-br from-purple-500 to-indigo-600 border-2 border-yellow-400 shrink-0 relative mt-1">
+                🧙‍♀️
+                <span class="absolute bottom-0 right-0 w-3 h-3 md:w-3.5 md:h-3.5 bg-green-400 border-2 border-purple-900 rounded-full"></span>
+            </div>
+            <div class="flex-1 pr-4">
+                <h4 class="font-bold text-yellow-300 font-mali flex items-center gap-1.5 text-base md:text-lg">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-yellow-400"></i> แม่หมอ SD ชวนคุย
+                </h4>
+                <p id="floatingFortuneText" class="text-sm md:text-base text-white mt-1.5 leading-relaxed drop-shadow-sm font-light"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Auth Overlay (หน้าต่าง Login) -->
     <div id="authOverlay" class="fixed inset-0 bg-[#2B0E42]/95 z-[100] flex items-center justify-center backdrop-blur-md transition-opacity duration-300 hidden animate-fade-in">
         <div class="glass-panel p-8 md:p-10 rounded-[2rem] shadow-[0_0_50px_rgba(253,224,71,0.2)] max-w-sm w-full border border-purple-400/50 relative overflow-hidden mx-4 animate-slide-up">
@@ -321,7 +338,7 @@
     </main>
 
     <!-- Custom Modal -->
-    <div id="customModal" class="fixed inset-0 bg-black/80 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+    <div id="customModal" class="fixed inset-0 bg-black/80 z-[300] hidden flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
         <div class="glass-panel border-2 border-yellow-400/50 rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-[0_0_50px_rgba(253,224,71,0.2)] animate-slide-up" id="modalContent">
             <h3 id="modalTitle" class="text-xl md:text-2xl font-bold font-mali text-yellow-400 mb-3 flex items-center gap-2">
                 <i data-lucide="bell-ring" class="w-6 h-6"></i> ข้อความ
@@ -364,7 +381,27 @@
 
         const FAKE_DOMAIN = '@sd-oracle.local';
 
-        // ... (Default Cards remain same) ...
+        // 🌟 เพิ่มคลังคำอวยพรและให้ความรู้แยกตาม SDG ทั้ง 17 ข้อ
+        const SDG_BLESSINGS = {
+            1: "แม่หมอขอขอบคุณแทนโลกใบนี้จ้า! การแบ่งปันของคุณช่วยขจัดความยากจน (SDG 1) ขอให้ผลบุญส่งให้คุณมั่งมีศรีสุข ร่ำรวยเงินทองนะจ๊ะ 💸",
+            2: "ขอบใจมากจ้า! คุณมีส่วนช่วยเรื่องขจัดความหิวโหย (SDG 2) ขอให้คุณและครอบครัวมีกินมีใช้ อุดมสมบูรณ์ตลอดไปนะลูก 🍚",
+            3: "เยี่ยมมากจ้า! สุขภาพที่ดีคือความมั่งคั่งที่แท้จริง (SDG 3) ขอให้คุณปราศจากโรคภัย ร่างกายแข็งแรง มีแรงสู้ต่อไปนะจ๊ะ 🏃‍♀️",
+            4: "การเรียนรู้ไม่มีวันสิ้นสุดนะลูก! (SDG 4) ขอบคุณที่สนับสนุนการศึกษา ขอให้คุณมีปัญญาเฉียบแหลม คิดอะไรก็ทะลุปรุโปร่งจ้า 📚",
+            5: "ความเท่าเทียมคือรากฐานของสังคมที่น่าอยู่ (SDG 5) แม่หมอขออวยพรให้คุณพบเจอแต่คนเคารพและให้เกียรติซึ่งกันและกันนะจ๊ะ ⚖️",
+            6: "น้ำคือชีวิต! ขอบคุณที่ช่วยดูแลทรัพยากรน้ำ (SDG 6) ขอให้ชีวิตคุณร่มเย็น ราบรื่นเหมือนสายน้ำเลยนะลูก 💧",
+            7: "พลังงานสะอาดช่วยโลกได้มากเลยนะ (SDG 7) ขอให้ชีวิตคุณมีแต่พลังบวก สว่างไสว และเปี่ยมด้วยพลังงานดีๆ ตลอดวันจ้า ⚡",
+            8: "การทำงานที่ดีช่วยขับเคลื่อนเศรษฐกิจ (SDG 8) แม่หมอขอให้หน้าที่การงานคุณเจริญรุ่งเรือง เติบโตอย่างมั่นคงนะจ๊ะ 📈",
+            9: "นวัตกรรมเปลี่ยนโลกได้! (SDG 9) ขอบคุณที่สนับสนุนความก้าวหน้า ขอให้คุณมีไอเดียใหม่ๆ บรรเจิดตลอดเวลาจ้า 💡",
+            10: "การลดความเหลื่อมล้ำทำให้โลกนี้น่าอยู่ขึ้นเยอะ (SDG 10) ขอให้คุณได้รับความยุติธรรมและโอกาสดีๆ ในทุกๆ วันนะจ๊ะ 🤝",
+            11: "เมืองที่ยั่งยืนเริ่มต้นที่พวกเราทุกคน (SDG 11) ขอให้การเดินทางและชีวิตความเป็นอยู่ของคุณปลอดภัยและมีความสุขจ้า 🏙️",
+            12: "ขอบคุณที่ช่วยลดขยะและใช้ทรัพยากรอย่างคุ้มค่านะจ๊ะ! (SDG 12) ขอให้คุณมีกินมีใช้ไม่ขาดมือ ไม่สิ้นเปลืองจ้า ♻️",
+            13: "สุดยอดเลยลูก! การกระทำของคุณช่วยลดโลกร้อนได้จริง (SDG 13) ขอให้ชีวิตคุณร่มเย็นเป็นสุข ปราศจากความร้อนใจนะจ๊ะ 🌍",
+            14: "ขอบคุณที่ช่วยปกป้องท้องทะเลและสัตว์น้ำนะจ๊ะ (SDG 14) ขอให้ความสุขของคุณกว้างใหญ่และลึกซึ้งดั่งมหาสมุทรเลยจ้า 🐟",
+            15: "ป่าไม้และสัตว์ป่าฝากขอบคุณมาจ้า! (SDG 15) ขอให้ชีวิตคุณอุดมสมบูรณ์ แวดล้อมด้วยกัลยาณมิตรที่ดีนะลูก 🌳",
+            16: "ความสงบสุขและยุติธรรมคือสิ่งล้ำค่า (SDG 16) ขอให้ชีวิตคุณสงบร่มเย็น พบเจอแต่ความยุติธรรมและความดีงามจ้า 🕊️",
+            17: "ความร่วมมือร่วมใจทำอะไรก็สำเร็จ! (SDG 17) ขอให้คุณมีมิตรภาพที่ดี มีคนคอยอุปถัมภ์ค้ำชูในทุกเรื่องนะจ๊ะ 🤝"
+        };
+
         const DEFAULT_CARDS = [
             { "sdgTopic": 13, title: "SDG 13: Climate Action", "fortuneText": "ดวงคุณวันนี้มีพลังงานความร้อนแฝงอยู่ ระวังอารมณ์หงุดหงิดเหมือนสภาพอากาศนะ!", "missionText": "พกแก้วน้ำส่วนตัวหรือถุงผ้าเพื่อลดขยะพลาสติก 1 ชิ้น", "luckyTip": "สวมเสื้อผ้าสีเขียวหรือฟ้าเพื่อความร่มเย็น", "pointsReward": 20, "imageUrl": "🌍", "isActive": true },
             { "sdgTopic": 3, title: "SDG 3: Good Health", "fortuneText": "ไพ่เตือนว่าช่วงนี้ลุยงานหนักเกินไป ร่างกายกำลังประท้วงเงียบๆ ต้องการการฟื้นฟูด่วนจ้า", "missionText": "ดื่มน้ำให้ครบ 8 แก้ว และลุกเดินยืดเส้นยืดสาย 15 นาที", "luckyTip": "กินผลไม้สีส้มหรือสีเหลืองเพิ่มความสดใส", "pointsReward": 15, "imageUrl": "❤️", "isActive": true },
@@ -880,7 +917,6 @@
 
                 let animationClass = index < 6 ? `stagger-${(index%4)+1}` : '';
 
-                // แก้ไขปุ่มลบ/แก้ไข ให้แสดงบนมือถือได้ชัดเจนขึ้น (opacity-80 แทน opacity-0)
                 html += `
                     <div class="bg-purple-900/60 p-4 md:p-5 rounded-2xl border border-purple-400/30 relative flex flex-col h-full shadow-lg group hover:border-blue-400/50 transition-colors backdrop-blur-sm ${animationClass}">
                         <div class="absolute top-2 right-2 flex gap-1 md:gap-2 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 bg-purple-950/80 p-1.5 rounded-xl border border-purple-500/30 backdrop-blur-md">
@@ -909,6 +945,32 @@
                 `;
             });
             listEl.innerHTML = html; lucide.createIcons();
+        }
+
+        // 🌟 ฟังก์ชันโชว์แชทลอยให้พร (Floating Fortune)
+        let floatingTimer = null;
+        function showFloatingFortune(sdgTopic) {
+            const popup = document.getElementById('floatingFortune');
+            const textEl = document.getElementById('floatingFortuneText');
+            
+            // ดึงข้อความให้พรตาม SDG ถ้าไม่มีให้ใช้ข้อความกว้างๆ
+            textEl.innerText = SDG_BLESSINGS[sdgTopic] || "เก่งมากจ้าลูกดวง! การกระทำของคุณช่วยให้โลกใบนี้น่าอยู่ขึ้น แม่หมอขอให้คุณมีแต่ความสุขความเจริญนะจ๊ะ ✨";
+            
+            // เล่น Animation แสดงผล
+            popup.classList.remove('translate-y-[150%]', 'opacity-0', 'pointer-events-none');
+            popup.classList.add('translate-y-0', 'opacity-100');
+            
+            // ซ่อนอัตโนมัติหลังจาก 12 วินาที
+            if(floatingTimer) clearTimeout(floatingTimer);
+            floatingTimer = setTimeout(() => {
+                hideFloatingFortune();
+            }, 12000);
+        }
+
+        function hideFloatingFortune() {
+            const popup = document.getElementById('floatingFortune');
+            popup.classList.add('translate-y-[150%]', 'opacity-0', 'pointer-events-none');
+            popup.classList.remove('translate-y-0', 'opacity-100');
         }
 
         function startTimer(expiresAt) {
@@ -972,6 +1034,14 @@
                 if (btn) { btn.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i> กำลังบันทึก...'; btn.disabled = true; lucide.createIcons(); }
 
                 const missionNoteText = noteInput ? noteInput.value.trim() : "";
+                
+                // หาว่าไพ่ใบนี้เป็น SDG หัวข้ออะไร เพื่อให้แม่หมอให้พรถูกข้อ
+                const drawDoc = state.userDraws.find(d => d.id === drawId) || state.userDraws[0];
+                let currentSdg = 1;
+                if (drawDoc) {
+                    const theCard = state.cards.find(c => c.id === drawDoc.cardId);
+                    if(theCard) currentSdg = theCard.sdgTopic;
+                }
 
                 if(SUPABASE_URL.includes('YOUR_SUPABASE')) {
                     state.userDraws[0].status = 'completed';
@@ -980,6 +1050,8 @@
                     document.getElementById('pointsText').innerText = `${state.points}`;
                     state.missionProofImage = null; 
                     renderHome();
+                    // 🌟 โชว์แชทให้พร
+                    showFloatingFortune(currentSdg);
                     return;
                 }
 
@@ -994,6 +1066,10 @@
                 
                 state.missionProofImage = null; 
                 await fetchData();
+                
+                // 🌟 โชว์แชทให้พรหลังจากบันทึกข้อมูลเรียบร้อย
+                showFloatingFortune(currentSdg);
+
             } catch (e) { console.error("Complete Mission Error", e); }
         }
 
@@ -1093,7 +1169,7 @@
                 
                 const systemPrompt = `คุณคือ 'แม่หมอ SD' หมอดูใจดี มีความรู้เรื่องเป้าหมายการพัฒนาที่ยั่งยืน (SDGs) ทั้ง 17 ข้อ ตอบด้วยน้ำเสียงอบอุ่น เป็นกันเอง ลงท้ายด้วยจ้า หรือ นะจ๊ะ 
 
-ข้อมูลของลูกดวงที่ล็อคอินอยู่ตรงหน้าคุณตอนนี้ (ดึงจากฐานข้อมูล Supabase):
+ข้อมูลของลูกดวงที่ล็อคอินอยู่ตรงหน้าคุณตอนนี้:
 - รหัสพนักงาน: ${empId}
 - แต้มบุญสะสม: ${currentPoints} แต้ม
 - สถิติทั้งหมด: เปิดไพ่มาแล้ว ${totalDraws} ครั้ง, ทำภารกิจสำเร็จ ${completedMissions} ครั้ง
@@ -1101,10 +1177,11 @@
 ประวัติการได้ไพ่และภารกิจล่าสุด (เรียงจากใหม่ไปเก่า):
 ${drawHistoryText}
 
-🔮 กฎเหล็กสำคัญที่สุดของแม่หมอ (ห้ามฝ่าฝืน): 
-1. คุณรับรู้และตอบคำถามได้เฉพาะข้อมูลของรหัสพนักงาน "${empId}" เท่านั้น! 
-2. หากผู้ใช้พิมพ์ถามถึง รหัสพนักงานคนอื่น ชื่อคนอื่น หรือขอดูข้อมูลของคนอื่น ให้ปฏิเสธอย่างสุภาพทันที
-3. ใช้ประวัติที่มีให้ เพื่อชวนคุย ชมเชย หรือแนะนำเป้าหมาย SDGs ข้อต่อไปให้เหมาะสมกับสิ่งที่เขาเคยทำมา`;
+🔮 กฎเหล็กของแม่หมอ: 
+1. ตอบให้กระชับ ตรงประเด็น ไม่ต้องร่ายยาว (ความยาวไม่เกิน 2-3 ประโยค)
+2. หากผู้ใช้ส่งภารกิจมา ให้ชมเชยสิ่งที่เขาทำ และบอกสั้นๆ ว่ามันช่วยโลก (ตาม SDG ข้อนั้นๆ) ได้อย่างไร
+3. คุณรับรู้และตอบคำถามได้เฉพาะข้อมูลของรหัสพนักงาน "${empId}" เท่านั้น
+4. หากผู้ใช้พิมพ์ถามถึง รหัสพนักงานคนอื่น ให้ปฏิเสธอย่างสุภาพทันที`;
 
                 const historyToSent = chatState.messages.length > 1 ? chatState.messages.slice(1).slice(-10) : [];
                 const recentMessages = historyToSent.map(msg => ({
