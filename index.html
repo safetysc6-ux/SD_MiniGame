@@ -335,13 +335,11 @@
         async function handleAuthSuccess(user) {
             state.user = user;
             document.getElementById('authOverlay').classList.add('hidden');
-            document.getElementById('loadingOverlay').style.display = 'none';
             document.getElementById('logoutBtn').classList.remove('hidden');
             
-            // ลบโค้ดบรรทัด toggleRoleBtn ที่เป็นตัวการทำให้ Error ออกแล้ว
-            // และดึงข้อมูลเริ่มทำงานต่อได้เลย
-            
+            // รอโหลดข้อมูลให้เสร็จก่อน ถึงค่อยเอาหน้าโหลดออก
             await fetchData();
+            document.getElementById('loadingOverlay').style.display = 'none';
         }
 
         async function handleEnter() {
@@ -478,7 +476,24 @@
                 `;
             } else {
                 const card = state.cards.find(c => c.id === activeDraw.cardId);
-                if (!card) { container.innerHTML = `<p>กำลังโหลดข้อมูลไพ่...</p>`; return; }
+                
+                // ระบบฟื้นฟูอัตโนมัติ (Auto-Recovery) กรณีไพ่บั๊กหรือถูกลบ
+                if (!card) { 
+                    if(!SUPABASE_URL.includes('YOUR_SUPABASE') && activeDraw.id !== 'mock-draw') {
+                        supabaseClient.from('daily_draws').delete().eq('id', activeDraw.id).then(() => fetchData());
+                    } else {
+                        state.userDraws = state.userDraws.filter(d => d.id !== activeDraw.id);
+                        setTimeout(renderHome, 1000);
+                    }
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 text-center w-full relative z-10">
+                            <i data-lucide="loader-2" class="w-12 h-12 text-yellow-400 animate-spin mb-4 mx-auto"></i>
+                            <p class="text-xl font-bold font-mali text-yellow-200">กำลังรีเซ็ตพลังงานไพ่ที่สูญหาย...</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return; 
+                }
 
                 let imageElement = (card.imageUrl && (card.imageUrl.startsWith('data:image') || card.imageUrl.startsWith('http')))
                     ? `<img src="${card.imageUrl}" class="w-full h-[220px] object-cover rounded-lg border-2 border-yellow-600/30" alt="Card Image">`
@@ -583,10 +598,12 @@
         }
 
         async function handleDrawCard() {
-            const simulatedCards = state.cards.length > 0 ? state.cards : DEFAULT_CARDS;
-            const activeCards = simulatedCards.filter(c => c.isActive || state.role === 'admin');
+            // ป้องกันการกดจั่วไพ่ขณะที่ไพ่ยังโหลดไม่เสร็จ หรือสำรับว่างเปล่า
+            if (state.cards.length === 0) return showModal('แจ้งเตือน', 'กำลังโหลดข้อมูลสำรับไพ่ หรือสำรับไพ่ว่างเปล่า กรุณารอสักครู่นะจ๊ะ');
             
-            if (activeCards.length === 0) return showModal('แจ้งเตือน', 'ยังไม่มีสำรับไพ่ กรุณาให้ Admin เพิ่มไพ่ก่อนจ้า');
+            const activeCards = state.cards.filter(c => c.isActive || state.role === 'admin');
+            
+            if (activeCards.length === 0) return showModal('แจ้งเตือน', 'ยังไม่มีสำรับไพ่ที่เปิดใช้งาน กรุณาให้ Admin เพิ่มไพ่ก่อนจ้า');
             
             const container = document.getElementById('homeContainer');
             container.innerHTML = `
