@@ -1284,16 +1284,24 @@
                     totalDraws = state.userDraws.length;
                     completedMissions = state.userDraws.filter(d => d.status === 'completed').length;
 
-                    const recentDraws = [...state.userDraws].sort((a, b) => b.drawnAt - a.drawnAt).slice(0, 5);
-                    const historyDetails = recentDraws.map(draw => {
+                    // 🌟 แก้ไข: ดึงประวัติทั้งหมดของรหัสนี้ โดยไม่จำกัดแค่ 5 ครั้งแล้ว
+                    const allDrawsHistory = [...state.userDraws].sort((a, b) => b.drawnAt - a.drawnAt);
+                    const historyDetails = allDrawsHistory.map(draw => {
                         const card = state.cards.find(c => c.id === draw.cardId);
                         if (!card) return null;
+                        
                         let statusTh = "";
-                        if (draw.status === 'completed') statusTh = "ทำภารกิจสำเร็จได้รับแต้มแล้ว";
+                        let noteTh = ""; // เก็บข้อความที่พนักงานเล่าให้ฟัง
+                        
+                        if (draw.status === 'completed') {
+                            statusTh = "ทำภารกิจสำเร็จ";
+                            if (draw.missionNote) noteTh = ` (สิ่งที่ลูกดวงพิมพ์เล่า: "${draw.missionNote}")`;
+                        }
                         else if (draw.status === 'pending') statusTh = "เปิดได้ล่าสุด กำลังรอส่งหลักฐาน";
                         else statusTh = "หมดเวลาทำภารกิจ (ทำไม่สำเร็จ)";
+                        
                         const date = new Date(draw.drawnAt).toLocaleDateString('th-TH');
-                        return `- วันที่ ${date}: ไพ่ ${card.title} (SDG ${card.sdgTopic}) -> ${statusTh}`;
+                        return `- วันที่ ${date}: ไพ่ ${card.title} (SDG ${card.sdgTopic}) -> ${statusTh}${noteTh}`;
                     }).filter(Boolean);
                     if (historyDetails.length > 0) drawHistoryText = historyDetails.join('\n');
                 }
@@ -1305,12 +1313,12 @@
 - แต้มบุญสะสม: ${currentPoints} แต้ม
 - สถิติทั้งหมด: เปิดไพ่มาแล้ว ${totalDraws} ครั้ง, ทำภารกิจสำเร็จ ${completedMissions} ครั้ง
 
-ประวัติการได้ไพ่และภารกิจล่าสุด (เรียงจากใหม่ไปเก่า):
+ประวัติการได้ไพ่และภารกิจทั้งหมด (เรียงจากใหม่ไปเก่า):
 ${drawHistoryText}
 
 🔮 กฎเหล็กของแม่หมอ: 
 1. ตอบให้กระชับ ตรงประเด็น ไม่ต้องร่ายยาว (ความยาวไม่เกิน 2-3 ประโยค)
-2. หากผู้ใช้ส่งภารกิจมา ให้ชมเชยสิ่งที่เขาทำ และบอกสั้นๆ ว่ามันช่วยโลก (ตาม SDG ข้อนั้นๆ) ได้อย่างไร
+2. 🌟 วิเคราะห์การกระทำของลูกดวงจาก "สิ่งที่ลูกดวงพิมพ์เล่า" ในประวัติ ดึงเอาการกระทำนั้นมาวิเคราะห์ ชมเชยอย่างจริงใจ และบอกสั้นๆ ว่ามันช่วยโลกยังไง
 3. คุณรับรู้และตอบคำถามได้เฉพาะข้อมูลของรหัสพนักงาน "${empId}" เท่านั้น
 4. หากผู้ใช้พิมพ์ถามถึง รหัสพนักงานคนอื่น ให้ปฏิเสธอย่างสุภาพทันที`;
 
